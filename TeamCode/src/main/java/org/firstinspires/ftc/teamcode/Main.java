@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp(name = "Main TeleOp")
 
 public class Main extends LinearOpMode{
-    //Some variables declared with 'final' keyword; says I should do it, but not sure why
     private final DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
     private final double[] driveMotorPower = new double[4]; //Untransformed motor power
     
