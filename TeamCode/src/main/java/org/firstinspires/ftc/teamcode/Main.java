@@ -150,6 +150,7 @@ public class Main extends LinearOpMode{
     }
 
     //Adjusts motor power to account for micro errors with motors
+    //EDIT: Deprecated and replaced by roadrunner
     /*
     public void adjustMotorPower(){
         //Uses drive motor encoders to get a delta position vector
