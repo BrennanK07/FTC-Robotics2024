@@ -9,19 +9,19 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp(name = "Main TeleOp")
 
 public class Main extends LinearOpMode{
-    private DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
-    private double[] driveMotorPower = new double[4]; //Untransformed motor power
+    private final DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
+    private final double[] driveMotorPower = new double[4]; //Untransformed motor power
     
     static double MOTOR_SPEED = 0.9; //Default 0.9
     static double ROTATION_SPEED = 1.0; //Default 0.75
     static double ACCEL_RATE = 0.05;
     static double DECEL_RATE = 0.25;
 
-    private Vector2 leftStick = new Vector2(0, 0);
-    private Vector2 rightStick = new Vector2(0, 0);
+    private final Vector2 leftStick = new Vector2(0, 0);
+    private final Vector2 rightStick = new Vector2(0, 0);
     static double STICK_DEADZONE = 0.1;
 
-    private DeltaFloat[] driveMotorPositions = new DeltaFloat[4];
+    private final DeltaFloat[] driveMotorPositions = new DeltaFloat[4];
     static double MECANUM_TICK_RATE = 537.7; //DriveMotorPos / MECANUM_TICK_RATE = totalRotations
     static double DRIVE_MOTOR_MAX_RPM = 312;
     
