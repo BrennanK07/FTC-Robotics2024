@@ -9,18 +9,18 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp(name = "Drive Motor Diagnostic")
 
 public class MotorDiagnostic extends LinearOpMode{
-    private DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
+    private final DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
     private DcMotor wormGear;
-    private double[] driveMotorPower = new double[4]; //Untransformed motor power
+    private final double[] driveMotorPower = new double[4]; //Untransformed motor power
     
     private double MOTOR_SPEED = 0.0;
 
     private int activeTestMotor = 0; //Follows order of driveMotor array
-    private String[] motorNames = {"front left", "front right", "back left", "back right"};
+    private final String[] motorNames = {"front left", "front right", "back left", "back right"};
 
     private boolean isHalted = true;
     
-    private boolean[] previousInput = new boolean[4]; //up, down, a, b
+    private final boolean[] previousInput = new boolean[4]; //up, down, a, b
     
     @Override
     public void runOpMode(){
