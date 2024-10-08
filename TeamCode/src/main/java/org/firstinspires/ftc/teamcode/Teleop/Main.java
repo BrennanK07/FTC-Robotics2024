@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Teleop;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Main TeleOp")
 
@@ -10,8 +11,8 @@ public class Main extends LinearOpMode{
     //Motors
     private final DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
     private final double[] driveMotorPower = new double[4]; //Untransformed motor power
-    private final DcMotor linearSlideMotor = new DcMotor();
-    private final Servo intakeMotor = new Servo();
+    private DcMotor linearSlideMotor;
+    private Servo intakeMotor;
     
     static double MOTOR_SPEED = 0.9; //Default 0.9
     static double ROTATION_SPEED = 1.0; //Default 0.75
@@ -23,8 +24,8 @@ public class Main extends LinearOpMode{
     private final Vector2 rightStick = new Vector2(0, 0);
     static double STICK_DEADZONE = 0.1;
 
-    private final double slideAxis = 0.0;
-    private final double intakeAxis = 0.0;
+    private double slideAxis = 0.0;
+    private double intakeAxis = 0.0;
 
     //Constants
     private final DeltaFloat[] driveMotorPositions = new DeltaFloat[4];
@@ -140,17 +141,17 @@ public class Main extends LinearOpMode{
         slideAxis = fixValue(gamepad2.left_stick_y);
 
         //LT for neg, RT for pos
-        if(fixValue(gamepad2.right_bumper) > 0){
+        if(fixValue(gamepad2.right_trigger) > 0){
             intakeAxis = fixValue(gamepad2.right_trigger);
         }
-        else if(fixValue(gamepad2.left_bumper) > 0){
+        else if(fixValue(gamepad2.left_trigger) > 0){
             intakeAxis = -fixValue(gamepad2.left_trigger);
         } 
     }
     
     public boolean isExceedingMaxPower(double[] magnitudes){
-        for(int i = 0; i < magnitudes.length; i++){
-            if(Math.abs(magnitudes[i]) > 1){
+        for (double magnitude : magnitudes) {
+            if (Math.abs(magnitude) > 1) {
                 return true;
             }
         }
@@ -174,9 +175,9 @@ public class Main extends LinearOpMode{
         linearSlideMotor.setPower(slideAxis);
 
         //Intake Servo
-        double currentServoPos = intakeMotor.getCurrentPosition();
+        double currentServoPos = intakeMotor.getPosition();
 
-        intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED))
+        intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED));
     }
 
     //Adjusts motor power to account for micro errors with motors
