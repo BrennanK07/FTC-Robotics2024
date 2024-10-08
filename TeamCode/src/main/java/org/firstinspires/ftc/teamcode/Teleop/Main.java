@@ -7,18 +7,26 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 @TeleOp(name = "Main TeleOp")
 
 public class Main extends LinearOpMode{
+    //Motors
     private final DcMotor[] driveMotor = new DcMotor[4]; //[fl, fr, bl, br]
     private final double[] driveMotorPower = new double[4]; //Untransformed motor power
+    private final DcMotor linearSlideMotor = new DcMotor();
+    private final Servo intakeMotor = new Servo();
     
     static double MOTOR_SPEED = 0.9; //Default 0.9
     static double ROTATION_SPEED = 1.0; //Default 0.75
     static double ACCEL_RATE = 0.05;
     static double DECEL_RATE = 0.25;
 
+    //Inputs
     private final Vector2 leftStick = new Vector2(0, 0);
     private final Vector2 rightStick = new Vector2(0, 0);
     static double STICK_DEADZONE = 0.1;
 
+    private final double slideAxis = 0.0;
+    private final double intakeAxis = 0.0;
+
+    //Constants
     private final DeltaFloat[] driveMotorPositions = new DeltaFloat[4];
     static double MECANUM_TICK_RATE = 537.7; //DriveMotorPos / MECANUM_TICK_RATE = totalRotations
     static double DRIVE_MOTOR_MAX_RPM = 312;
@@ -28,6 +36,8 @@ public class Main extends LinearOpMode{
     double oldUnixTimestamp = System.nanoTime() * 1e-9;
     double unixTimestamp = System.nanoTime() * 1e-9;
     double deltaTime;
+
+    static double SERVO_SPEED = 0.1;
     
     @Override
     public void runOpMode(){
@@ -36,6 +46,9 @@ public class Main extends LinearOpMode{
         driveMotor[1] = hardwareMap.get(DcMotor.class, "front right");
         driveMotor[2] = hardwareMap.get(DcMotor.class, "back left");
         driveMotor[3] = hardwareMap.get(DcMotor.class, "back right");
+
+        linearSlideMotor = hardwareMap.get(DcMotor.class, "worm_gear");
+        intakeMotor = hardwareMap.get(Servo.class, "intake");
 
         //Init drive motor encoders
         for(int i = 0; i < 4; i++){
@@ -123,6 +136,16 @@ public class Main extends LinearOpMode{
             driveMotorPower[1] += rightStick.x * ROTATION_SPEED;
             driveMotorPower[3] += rightStick.x * ROTATION_SPEED;
         }
+
+        slideAxis = fixValue(gamepad2.left_stick_y);
+
+        //LT for neg, RT for pos
+        if(fixValue(gamepad2.right_bumper) > 0){
+            intakeAxis = fixValue(gamepad2.right_trigger);
+        }
+        else if(fixValue(gamepad2.left_bumper) > 0){
+            intakeAxis = -fixValue(gamepad2.left_trigger);
+        } 
     }
     
     public boolean isExceedingMaxPower(double[] magnitudes){
@@ -137,6 +160,7 @@ public class Main extends LinearOpMode{
     
     //Sets the values of the drive motors from the driveMotorPower[] array
     public void setDriveMotors(double[] motorPowers){
+        //Drive motors
         for(int i = 0; i < 4; i++){
             if(i == 1 || i == 3){ //Fixes motor spinning backwards
                 motorPowers[i] = -motorPowers[i];
@@ -145,6 +169,14 @@ public class Main extends LinearOpMode{
             driveMotor[i].setPower(motorPowers[i]);
             //driveMotor[i].setPower(lerp(driveMotor[i].getPower(), motorPowers[i], ACCEL_RATE));
         }
+
+        //Linear slide
+        linearSlideMotor.setPower(slideAxis);
+
+        //Intake Servo
+        double currentServoPos = intakeMotor.getCurrentPosition();
+
+        intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED))
     }
 
     //Adjusts motor power to account for micro errors with motors
