@@ -6,9 +6,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "PrototypeMotorTest")
+
 public class PrototypeMotorTest extends LinearOpMode {
-    public String configName = ""; //INSERT MOTOR NAME IN CONFIG BETWEEN ""
-    public String motorType = "servo"; //servo, or dc
+    public String configName = "worm_gear"; //INSERT MOTOR NAME IN CONFIG BETWEEN ""
+    public String motorType = "dc"; //servo, or dc
 
     public Servo testServo;
     public DcMotor testMotor;
