@@ -13,6 +13,7 @@ public class Main extends LinearOpMode{
     private final double[] driveMotorPower = new double[4]; //Untransformed motor power
     private DcMotor linearSlideMotor;
     private Servo intakeMotor;
+    private DcMotor linearSlidePosMotor;
     
     static double MOTOR_SPEED = 0.9; //Default 0.9
     static double ROTATION_SPEED = 1.0; //Default 0.75
@@ -25,6 +26,7 @@ public class Main extends LinearOpMode{
     static double STICK_DEADZONE = 0.1;
 
     private double slideAxis = 0.0;
+    private double slidePosAxis = 0.0;
     private double intakeAxis = 0.0;
 
     //Constants
@@ -50,6 +52,7 @@ public class Main extends LinearOpMode{
 
         linearSlideMotor = hardwareMap.get(DcMotor.class, "worm_gear");
         intakeMotor = hardwareMap.get(Servo.class, "intake");
+        linearSlidePosMotor = hardwareMap.get(DcMotor.class, "slide");
 
         //Init drive motor encoders
         for(int i = 0; i < 4; i++){
@@ -81,6 +84,7 @@ public class Main extends LinearOpMode{
                     telemetry.addData("Wheel Velocity Test " + i + " ", (driveMotorPositions[i].deltaPos) / (deltaTime * MECANUM_TICK_RATE));
                 }
                 telemetry.addData("deltaTime Test ", deltaTime);
+                telemetry.addData("intake Axis", intakeAxis);
             }
             
             telemetry.update();
@@ -140,13 +144,17 @@ public class Main extends LinearOpMode{
 
         slideAxis = fixValue(gamepad2.left_stick_y);
 
+        slidePosAxis = fixValue(gamepad2.right_stick_y);
+
         //LT for neg, RT for pos
-        if(fixValue(gamepad2.right_trigger) > 0){
+        if(gamepad2.right_trigger > 0){
             intakeAxis = fixValue(gamepad2.right_trigger);
         }
-        else if(fixValue(gamepad2.left_trigger) > 0){
+        else if(gamepad2.left_trigger > 0){
             intakeAxis = -fixValue(gamepad2.left_trigger);
-        } 
+        }else{
+            intakeAxis = 0;
+        }
     }
     
     public boolean isExceedingMaxPower(double[] magnitudes){
@@ -178,6 +186,9 @@ public class Main extends LinearOpMode{
         double currentServoPos = intakeMotor.getPosition();
 
         intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED));
+        //intakeMotor.setPosition(intakeAxis);
+
+        linearSlidePosMotor.setPower(slidePosAxis);
     }
 
     //Adjusts motor power to account for micro errors with motors
