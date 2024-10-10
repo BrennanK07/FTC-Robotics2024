@@ -33,7 +33,10 @@ public class Main extends LinearOpMode{
     private final DeltaFloat[] driveMotorPositions = new DeltaFloat[4];
     static double MECANUM_TICK_RATE = 537.7; //DriveMotorPos / MECANUM_TICK_RATE = totalRotations
     static double DRIVE_MOTOR_MAX_RPM = 312;
-    
+
+    static double MAX_SLIDE_EXTENSION = 537.7 * 4.1; //4.1 rotations
+    static double MIN_SLIDE_EXTENSION = 0.0;
+
     static boolean SHOW_DEBUG_VALUES = true;
     
     double oldUnixTimestamp = System.nanoTime() * 1e-9;
@@ -54,13 +57,14 @@ public class Main extends LinearOpMode{
         intakeMotor = hardwareMap.get(Servo.class, "intake");
         linearSlidePosMotor = hardwareMap.get(DcMotor.class, "slide");
 
+
         //Init drive motor encoders
         for(int i = 0; i < 4; i++){
             driveMotorPositions[i] = new DeltaFloat();
             driveMotorPositions[i].updatePos(driveMotor[i].getCurrentPosition() / MECANUM_TICK_RATE);
         }
         
-        telemetry.addData("Status", "Initalized");
+        telemetry.addData("Status", "Initialized");
         telemetry.update();
         
         //Wait for driver to press play
@@ -85,6 +89,7 @@ public class Main extends LinearOpMode{
                 }
                 telemetry.addData("deltaTime Test ", deltaTime);
                 telemetry.addData("intake Axis", intakeAxis);
+                telemetry.addData("Linear Slide Encoder Position", linearSlideMotor.getCurrentPosition());
             }
             
             telemetry.update();
@@ -188,7 +193,25 @@ public class Main extends LinearOpMode{
         intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED));
         //intakeMotor.setPosition(intakeAxis);
 
+        //Linear slide
         linearSlidePosMotor.setPower(slidePosAxis);
+
+        //Stops linear slide from exceeding its bounds
+        if(linearSlidePosMotor.getCurrentPosition() >= MAX_SLIDE_EXTENSION){
+            linearSlidePosMotor.setTargetPosition((int)MAX_SLIDE_EXTENSION);
+        }
+        if(linearSlidePosMotor.getCurrentPosition() <= MIN_SLIDE_EXTENSION){
+            linearSlidePosMotor.setTargetPosition((int)MIN_SLIDE_EXTENSION);
+        }
+    }
+    
+    //Helps with analog stick accuracy by forcing an input greater than +THRESHOLD or -THRESHOLD to register
+    public double fixValue(double value){
+        if(Math.abs(value) < STICK_DEADZONE){
+            return 0;
+        }else{
+            return value;
+        }
     }
 
     //Adjusts motor power to account for micro errors with motors
@@ -204,7 +227,7 @@ public class Main extends LinearOpMode{
 
         //Defines vectors for all drive motors
         double[] motorScalar = new double[4];
-        
+
         for(int i = 0; i < 4; i++){
             motorScalar[i] = driveMotorPositions[i].deltaPos / (deltaTime * MECANUM_TICK_RATE);
         }
@@ -212,7 +235,7 @@ public class Main extends LinearOpMode{
         //Defines expected output vectors for drive motors, which are changed by outside factors
         //expectedVector is the same as driveMotorPower but expectedVector sounds cooler
         double[] expectedScalar = new double[4];
-        
+
         for(int i = 0; i < 4; i++){
             expectedScalar[i] = driveMotorPower[i];
         }
@@ -221,16 +244,16 @@ public class Main extends LinearOpMode{
 
         //Calculations to reposition vector to account for drift and strafe
         //All angles calculated in radians
-        
+
         //Left hand side
-        
+
         //Combine left and right vectors and divide y/x and find arctan
         double actualTheta = Math.atan2((motorScalar[0] + motorScalar[2]), (motorScalar[0] - motorScalar[2]));
         double expectedTheta = Math.atan2(expectedScalar[0] + expectedScalar[2], expectedScalar[0] - expectedScalar[2]);
-        
+
         telemetry.addData("actualAngle ", actualTheta);
         telemetry.addData("expectedAngle ", expectedTheta);
-        
+
         //New angle is left offset instead of right offset
         double adjustedTheta = expectedTheta + actualTheta - (Math.PI / 4);
 
@@ -249,26 +272,17 @@ public class Main extends LinearOpMode{
             telemetry.addData("Motor " + i + " adjusted speed", generatedScalar[i]);
         ]
     }*/
-    
+
     //EDIT: DEPRECIATED
     public double lerp(double start, double end, double speed){
         //Helps with acceleration
         //transitions between first and second value
-        //Returns start 
+        //Returns start
 
         if(Math.abs(start - end) < 0.01){
             return 0;
         }
-        
+
         return (start * (1.0 - speed)) + (end * speed);
-    }
-    
-    //Helps with analog stick accuracy by forcing an input greater than +THRESHOLD or -THRESHOLD to register
-    public double fixValue(double value){
-        if(Math.abs(value) < STICK_DEADZONE){
-            return 0;
-        }else{
-            return value;
-        }
     }
 }
