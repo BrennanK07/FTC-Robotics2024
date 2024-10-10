@@ -43,7 +43,7 @@ public class Main extends LinearOpMode{
     double unixTimestamp = System.nanoTime() * 1e-9;
     double deltaTime;
 
-    static double SERVO_SPEED = 0.1;
+    static double SERVO_SPEED = 1;
     
     @Override
     public void runOpMode(){
@@ -89,7 +89,7 @@ public class Main extends LinearOpMode{
                 }
                 telemetry.addData("deltaTime Test ", deltaTime);
                 telemetry.addData("intake Axis", intakeAxis);
-                telemetry.addData("Linear Slide Encoder Position", linearSlideMotor.getCurrentPosition());
+                telemetry.addData("Linear Slide Encoder Position", linearSlidePosMotor.getCurrentPosition());
             }
             
             telemetry.update();
@@ -190,7 +190,7 @@ public class Main extends LinearOpMode{
         //Intake Servo
         double currentServoPos = intakeMotor.getPosition();
 
-        intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED));
+        intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED * deltaTime));
         //intakeMotor.setPosition(intakeAxis);
 
         //Linear slide
