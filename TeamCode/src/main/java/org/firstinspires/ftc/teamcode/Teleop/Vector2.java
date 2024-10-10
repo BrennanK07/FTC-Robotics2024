@@ -9,6 +9,11 @@ public class Vector2{
         this.y = y;
     }
 
+    public Vector2(){
+        this.x = 0;
+        this.y = 0;
+    }
+
     public Vector2 combine(Vector2 a, Vector2 b){
         Vector2 combined = new Vector2(0, 0);
 
