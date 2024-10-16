@@ -40,6 +40,9 @@ public class Main extends LinearOpMode{
     double oldUnixTimestamp = System.nanoTime() * 1e-9;
     double unixTimestamp = System.nanoTime() * 1e-9;
     double deltaTime;
+
+    double currentServoPos = 0;
+    static double SERVO_SPEED = 1;
     
     @Override
     public void runOpMode(){
@@ -55,7 +58,8 @@ public class Main extends LinearOpMode{
 
         //Setup encoder types
         linearSlidePosMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        linearSlidePosMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        linearSlidePosMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
 
         //Init drive motor encoders
         for(int i = 0; i < 4; i++){
@@ -82,10 +86,12 @@ public class Main extends LinearOpMode{
                 telemetry.addData("Left Stick Position:", leftStick.x + ", " + leftStick.y);
                 telemetry.addData("Right Stick Position:", rightStick.x + ", " + rightStick.y);
                 //telemetry.addData("Motor Position TEST", driveMotor[0].getCurrentPosition());
-            
+
+                /*
                 for(int i = 0; i < 4; i++){
                     telemetry.addData("Wheel Velocity Test " + i + " ", (driveMotorPositions[i].deltaPos) / (deltaTime * MECANUM_TICK_RATE));
                 }
+                */
 
                 telemetry.addData("deltaTime (ms) ", (int)(deltaTime * 1000));
                 telemetry.addData("intake Axis", intakeAxis);
@@ -190,11 +196,13 @@ public class Main extends LinearOpMode{
         //Intake Servo
         //double currentServoPos = intakeMotor.getPosition();
 
-        //intakeMotor.setPosition(currentServoPos + (intakeAxis * SERVO_SPEED * deltaTime));
-        intakeMotor.setPower(intakeAxis);
+        currentServoPos += intakeAxis * SERVO_SPEED * deltaTime;
+
+        intakeMotor.setPower(currentServoPos + (intakeAxis * SERVO_SPEED * deltaTime));
+        //intakeMotor.setPower(intakeAxis);
 
         //Linear slide
-        linearSlidePosMotor.setPower(slidePosAxis);
+        linearSlidePosMotor.setTargetPosition((int)(slidePosAxis * MAX_SLIDE_EXTENSION));
 
         //Stops linear slide from exceeding its bounds
         if(linearSlidePosMotor.getCurrentPosition() >= (int)MAX_SLIDE_EXTENSION){
