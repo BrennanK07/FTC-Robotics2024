@@ -109,8 +109,7 @@ public class Main extends LinearOpMode{
     }
 
     public void updateControllerInputs(){
-        //Controller input temp
-        //Two weeks later and this was definitely not temporary
+        //Controller input
         leftStick.x = gamepad1.left_stick_x;
         leftStick.y = gamepad1.left_stick_y;
             
