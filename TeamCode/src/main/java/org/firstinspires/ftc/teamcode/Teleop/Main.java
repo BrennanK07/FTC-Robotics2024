@@ -43,6 +43,10 @@ public class Main extends LinearOpMode{
 
     double currentServoPos = 0;
     static double SERVO_SPEED = 1;
+
+    //Drive Adjustment
+    public Vector2 driveDirection = new Vector2();
+    public Vector2 rotationHeading = new Vector2();
     
     @Override
     public void runOpMode(){
@@ -152,8 +156,10 @@ public class Main extends LinearOpMode{
             driveMotorPower[3] += rightStick.x * ROTATION_SPEED;
         }
 
-        slideAxis = fixValue(gamepad2.left_stick_y);
+        //Combined Directional Vector
 
+        //Intake / slide
+        slideAxis = fixValue(gamepad2.left_stick_y);
         slidePosAxis = fixValue(gamepad2.right_stick_y);
 
         //LT for neg, RT for pos
