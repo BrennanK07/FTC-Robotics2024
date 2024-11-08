@@ -43,10 +43,6 @@ public class Main extends LinearOpMode{
 
     double currentServoPos = 0;
     static double SERVO_SPEED = 1;
-
-    //Drive Adjustment
-    public Vector2 driveDirection = new Vector2();
-    public Vector2 rotationHeading = new Vector2();
     
     @Override
     public void runOpMode(){
@@ -227,66 +223,51 @@ public class Main extends LinearOpMode{
         }
     }
 
+    //Scales all drive motor powers until they all fall within the range [-1, 1]
+    public void normalizeValues(){
+        
+    }
+
     //Adjusts motor power to account for micro errors with motors
-    //EDIT: Deprecated and replaced by roadrunner
-    /*
     public void adjustMotorPower(){
         //Uses drive motor encoders to get a delta position vector
 
-        //"driveMotorPositions" calculated in 1.0 / revolution
+        //Updates deltapos to new encoder positions
         for(int i = 0; i < 4; i++){
-            driveMotorPositions[i].updatePos(driveMotor[i].getCurrentPosition() / MECANUM_TICK_RATE);
+            driveMotorPostions[i].updatePos(driveMotor[i].getCurrentPosition());
         }
 
-        //Defines vectors for all drive motors
-        double[] motorScalar = new double[4];
+        //Calculates position vectors and combines to get actual heading
+        Vector2 motorVectors[] = new Vector2[4];
 
-        for(int i = 0; i < 4; i++){
-            motorScalar[i] = driveMotorPositions[i].deltaPos / (deltaTime * MECANUM_TICK_RATE);
-        }
+        //Sets motordirection vectors to direction vector of each mecanum wheel
+        motorVectors[0] = new Vector2(driveMotorPositions[0], driveMotorPositions[0]);
+        motorVectors[1] = new Vector2(-driveMotorPositions[1], driveMotorPositions[1]);
+        motorVectors[2] = new Vector2(-driveMotorPositions[2], driveMotorPositions[2]);
+        motorVectors[3] = new Vector2(driveMotorPositions[3], driveMotorPositions[3]);
 
-        //Defines expected output vectors for drive motors, which are changed by outside factors
-        //expectedVector is the same as driveMotorPower but expectedVector sounds cooler
-        double[] expectedScalar = new double[4];
+        //Combines left vectors and right vectors
+        Vector2 leftVector = Vector2.combine(motorVectors[0], motorVectors[2]);
+        Vector2 rightVector = Vector2.combine(motorVectors[1], motorVectors[3]);
 
-        for(int i = 0; i < 4; i++){
-            expectedScalar[i] = driveMotorPower[i];
-        }
+        //Calculates heading
+        Vector2 headingVector = Vector2.combine(leftVector, rightVector);
 
-        double[] generatedScalar = new double[4];
+        //Gets expected heading based on controller input
+        Vector2 expectedVector = new Vector2(leftStick.x, leftStick.y);
 
-        //Calculations to reposition vector to account for drift and strafe
-        //All angles calculated in radians
+        //Calculates difference between heading and expected heading
+        double headingErrorTheta = expectedVector.getTheta() - headingVector.getTheta();
 
-        //Left hand side
+        //Subtracts error angle from expected to get adjusted vector
+        Vector2 newVector = new Vector2();
+        newVector.x = Math.cos(headingVector.getTheta() - headingErrorTheta);
+        newVector.y = Math.sin(headingVector.getTheta() - headingErrorTheta);
 
-        //Combine left and right vectors and divide y/x and find arctan
-        double actualTheta = Math.atan2((motorScalar[0] + motorScalar[2]), (motorScalar[0] - motorScalar[2]));
-        double expectedTheta = Math.atan2(expectedScalar[0] + expectedScalar[2], expectedScalar[0] - expectedScalar[2]);
 
-        telemetry.addData("actualAngle ", actualTheta);
-        telemetry.addData("expectedAngle ", expectedTheta);
+    }
 
-        //New angle is left offset instead of right offset
-        double adjustedTheta = expectedTheta + actualTheta - (Math.PI / 4);
-
-        //Convert back to vectors and wheel powers
-        //When rotated -pi/4, mecanum wheel vectors match x and y directions
-        Vector2 adjustedVector = new Vector2(Math.cos(adjustedTheta), Math.sin(adjustedTheta));
-
-        generatedScalar[0] = adjustedTheta.x;
-        generatedScalar[1] = adjustedTheta.y;
-        generatedScalar[2] = adjustedTheta.y;
-        generatedScalar[3] = adjustedTheta.x;
-
-        //Temporary set drive motor power to equal generated vectors
-        for(int i = 0; i < 4; i++)[
-            driveMotorPower[i] = generatedScalar[i];
-            telemetry.addData("Motor " + i + " adjusted speed", generatedScalar[i]);
-        ]
-    }*/
-
-    //EDIT: DEPRECIATED
+    //EDIT: DEPRICATED
     /*
     public double lerp(double start, double end, double speed){
         //Helps with acceleration

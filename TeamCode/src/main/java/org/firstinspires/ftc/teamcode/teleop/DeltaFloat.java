@@ -9,7 +9,7 @@ public class DeltaFloat{
     double currentPos;
     double deltaPos;
 
-    void DeltaFloat(double initVal){
+    public DeltaFloat(double initVal){
         oldPos = initVal;
         currentPos = initVal;
     }
