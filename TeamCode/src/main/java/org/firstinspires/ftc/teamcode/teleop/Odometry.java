@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 public class Odometry extends Main{
-    public OdometryArray odometry = new OdometryArray();
+    /*public OdometryArray odometry = new OdometryArray();
 
     static double LATERAL_DISTANCE = 1.0; //Distance between two lateral wheels
     static double FORWARD_OFFSET = 1.0; //Distance from center of rotation to y-axis wheel
@@ -20,7 +20,7 @@ public class Odometry extends Main{
         DcMotor left;
         DcMotor right;
         DcMotor back;
-        
+
         DeltaFloat leftOdo = new DeltaFloat();
         DeltaFloat rightOdo = new DeltaFloat();
         DeltaFloat frontOdo = new DeltaFloat();
@@ -37,5 +37,5 @@ public class Odometry extends Main{
         }
 
 
-    }
+    }*/
 }

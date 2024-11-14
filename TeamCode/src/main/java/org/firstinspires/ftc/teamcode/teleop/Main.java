@@ -63,7 +63,7 @@ public class Main extends LinearOpMode{
 
         //Init drive motor encoders
         for(int i = 0; i < 4; i++){
-            driveMotorPositions[i] = new DeltaFloat();
+            //driveMotorPositions[i] = new DeltaFloat();
             driveMotorPositions[i].updatePos(driveMotor[i].getCurrentPosition() / MECANUM_TICK_RATE);
         }
         
@@ -228,7 +228,7 @@ public class Main extends LinearOpMode{
         
     }
 
-    //Adjusts motor power to account for micro errors with motors
+    /*Adjusts motor power to account for micro errors with motors
     public void adjustMotorPower(){
         //Uses drive motor encoders to get a delta position vector
 
@@ -265,7 +265,7 @@ public class Main extends LinearOpMode{
         newVector.y = Math.sin(headingVector.getTheta() - headingErrorTheta);
 
 
-    }
+    }*/
 
     //EDIT: DEPRICATED
     /*
