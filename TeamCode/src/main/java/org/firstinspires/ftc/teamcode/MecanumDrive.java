@@ -64,12 +64,12 @@ public final class MecanumDrive {
 
         // drive model parameters
         public double inPerTick = 0.00287869192239046577235304277736;
-        public double lateralInPerTick = 0.00226678150530376;
-        public double trackWidthTicks = 0;
+        public double lateralInPerTick = 0.002271096763270107;
+        public double trackWidthTicks = 5120.980871292489;
 
         // feedforward parameters (in tick units)
-        public double kS = 1.1308293564633982;
-        public double kV = 0.0005611979862216683;
+        public double kS = 0.9958087430370153;
+        public double kV = 0.0005727891042334015;
         public double kA = 1.1181253662077313;
 
         // path profile parameters (in inches)
@@ -215,7 +215,7 @@ public final class MecanumDrive {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        // TODO: make sure your config has motors with these names (or change them)
+        // TODO: make sure your config has motors with these names (or change them) DONE
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
@@ -227,7 +227,7 @@ public final class MecanumDrive {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // TODO: reverse motor directions if needed
+        // TODO: reverse motor directions if needed DONE
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
