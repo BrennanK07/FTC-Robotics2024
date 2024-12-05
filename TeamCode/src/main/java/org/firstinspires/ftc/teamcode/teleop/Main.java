@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "Main TeleOp")
+//@TeleOp(name = "Main TeleOp")
 
 public class Main extends LinearOpMode{
     //Motors
