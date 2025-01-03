@@ -19,14 +19,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Config
-@Autonomous(name = "TestPath", group = "Autonomous")
-public class FirstAutonomousTest extends LinearOpMode {
-    @Override
-    public void runOpMode() {
-        Pose2d initialPose = new Pose2d(-11.5, -61, Math.toRadians(90));
-        MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-
+public class AutonomousFunctions {
+    /*
         Action redClip = drive.actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
                 .splineTo(new Vector2d(0, -36), Math.toRadians(90))
                 .waitSeconds(1)
@@ -75,13 +69,5 @@ public class FirstAutonomousTest extends LinearOpMode {
                 .waitSeconds(30)
                 .endTrajectory()
                 .build();
-
-        waitForStart();
-
-        Actions.runBlocking(
-                new SequentialAction(
-                        redBucket
-                )
-        );
-    }
+     */
 }
