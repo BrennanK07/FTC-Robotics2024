@@ -97,7 +97,6 @@ public class NewMain extends LinearOpMode{
             bucketSlide.setPower(-gamepad2.left_stick_x);
 
             //Platform slide
-            /*
             platformSlide.setPower(1.0);
             platformSlideTargetPos += (int)(ENCODER_SPEED * deltaTime * -gamepad2.right_stick_y);
 
@@ -106,27 +105,20 @@ public class NewMain extends LinearOpMode{
             }
             if(platformSlideTargetPos < 0){
                 platformSlideTargetPos = 0;
-            }*/
-
-            if(-gamepad2.right_stick_y < 0) {
-                platformSlide.setTargetPosition(0);
-            }else{
-                platformSlide.setTargetPosition(3500);
             }
-            platformSlide.setPower(-gamepad2.right_stick_y);
 
-            //platformSlide.setTargetPosition(platformSlideTargetPos);
+            platformSlide.setTargetPosition(platformSlideTargetPos);
 
             telemetry.addData("Platform Slide Position", platformSlide.getCurrentPosition());
             telemetry.addData("Platform Slide Target Position", platformSlideTargetPos);
 
             //Bucket Servo
             if(gamepad2.right_trigger != 0) {
-                bucketIntake.setPower(1.047);
+                bucketIntake.setPower(1);
             }else if(gamepad2.right_bumper){
-                bucketIntake.setPower(-1.047);
+                bucketIntake.setPower(-1);
             }else{
-                bucketIntake.setPower(0.047);
+                bucketIntake.setPower(0);
             }
 
             //telemetry.addData("Intake trigger", gamepad2.right_trigger);
