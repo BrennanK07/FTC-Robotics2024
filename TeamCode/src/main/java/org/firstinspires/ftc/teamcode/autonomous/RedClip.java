@@ -31,6 +31,10 @@ public class RedClip extends LinearOpMode {
 
         public PlatformSlide(HardwareMap hardwareMap){
             platformSlide = hardwareMap.get(DcMotor.class, "platformSlide");
+
+            platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
+            targetPosition = platformSlide.getCurrentPosition();
         }
 
         public class MoveToPosition implements Action{
@@ -48,10 +52,6 @@ public class RedClip extends LinearOpMode {
         public Action moveToPosition(int position){
             return new MoveToPosition(position);
         }
-
-        public Action moveSlide(DcMotor slide, int position) {
-            return new slide.setTargetPosition(position);
-        }
     }
 
     @Override
@@ -61,9 +61,7 @@ public class RedClip extends LinearOpMode {
 
         //Linear slides
         DcMotor bucketSlide = hardwareMap.get(DcMotor.class, "bucketSlide"); //Max extension 2380
-        DcMotor platformSlide = hardwareMap.get(DcMotor.class, "platformSlide"); //Max extension 3900
-        int platformSlideTargetPos = 0;
-        int bucketSlideTargetPos = 0;
+        DcMotor platformSlide = new PlatformSlide(hardwareMap); //Max extension 3900
 
         //DcMotor climbSlideFront = hardwareMap.get(DcMotor.class, "motorName");
         //DcMotor climbSlideBack = hardwareMap.get(DcMotor.class, "motorName");
@@ -78,15 +76,7 @@ public class RedClip extends LinearOpMode {
 
         //Initialize motors with encoders before starting
         bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //bucketSlide.setTargetPosition(0);
-
         bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
-
-        platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //platformSlide.setTargetPosition(0);
-        //
-        platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
-        //platformSlide.setTargetPosition(0);
 
         Action clip1 = drive.actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
                 .splineTo(new Vector2d(0, -36), Math.toRadians(90))
@@ -129,7 +119,7 @@ public class RedClip extends LinearOpMode {
         Actions.runBlocking(
                 new SequentialAction(
                         clip1,
-                        moveSlide(platformSlide, 2500)
+                        platformSlide.moveToPosition(2500) //Hanging first clip
                 )
         );
     }
