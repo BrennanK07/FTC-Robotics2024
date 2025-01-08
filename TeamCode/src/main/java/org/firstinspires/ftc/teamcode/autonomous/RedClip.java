@@ -12,6 +12,8 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
@@ -22,16 +24,78 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Config
 @Autonomous(name = "RedClip", group = "Autonomous")
 public class RedClip extends LinearOpMode {
+    public class PlatformSlide {
+        private DcMotor platformSlide;
+
+        private int targetPositon = 0;
+
+        public PlatformSlide(HardwareMap hardwareMap){
+            platformSlide = hardwareMap.get(DcMotor.class, "platformSlide");
+        }
+
+        public class MoveToPosition implements Action{
+            public MoveToPosition(int position){
+                targetPositon = position;
+            }
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet){
+                platformSlide.setTargetPosition(targetPositon);
+                return false;
+            }
+        }
+
+        public Action moveToPosition(int position){
+            return new MoveToPosition(position);
+        }
+
+        public Action moveSlide(DcMotor slide, int position) {
+            return new slide.setTargetPosition(position);
+        }
+    }
+
     @Override
     public void runOpMode() {
         Pose2d initialPose = new Pose2d(-11.5, -61, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-        Action redClip = drive.actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
+        //Linear slides
+        DcMotor bucketSlide = hardwareMap.get(DcMotor.class, "bucketSlide"); //Max extension 2380
+        DcMotor platformSlide = hardwareMap.get(DcMotor.class, "platformSlide"); //Max extension 3900
+        int platformSlideTargetPos = 0;
+        int bucketSlideTargetPos = 0;
+
+        //DcMotor climbSlideFront = hardwareMap.get(DcMotor.class, "motorName");
+        //DcMotor climbSlideBack = hardwareMap.get(DcMotor.class, "motorName");
+
+        //Servos
+        Servo bucketSwing = hardwareMap.get(Servo.class, "bucketSwing");
+        Servo clawPivot = hardwareMap.get(Servo.class, "clawPivot");
+        Servo clawGrab = hardwareMap.get(Servo.class, "clawGrab");
+
+        //CRServos
+        CRServo bucketIntake = hardwareMap.get(CRServo.class, "bucketIntake");
+
+        //Initialize motors with encoders before starting
+        bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //bucketSlide.setTargetPosition(0);
+
+        bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+
+        platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //platformSlide.setTargetPosition(0);
+        //
+        platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
+        //platformSlide.setTargetPosition(0);
+
+        Action clip1 = drive.actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
                 .splineTo(new Vector2d(0, -36), Math.toRadians(90))
                 .waitSeconds(1)
                 .turn(Math.toRadians(-90))
                 .strafeTo(new Vector2d(36, -36))
+                .build();
+
+        Action clip2 = drive.actionBuilder(new Pose2d(36, -36, Math.toRadians(90)))
                 .turn(Math.toRadians(90))
                 .lineToY(-10)
                 .strafeTo(new Vector2d(45, -15)) //Sample 1
@@ -64,7 +128,8 @@ public class RedClip extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        redClip
+                        clip1,
+                        moveSlide(platformSlide, 2500)
                 )
         );
     }

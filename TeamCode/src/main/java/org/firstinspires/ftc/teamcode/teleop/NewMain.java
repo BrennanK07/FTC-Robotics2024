@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -25,8 +26,9 @@ public class NewMain extends LinearOpMode{
     double currentUnixTimestamp = System.nanoTime() * 1e-9;
     double deltaTime = System.nanoTime() * 1e-9;
 
-    static double ENCODER_SPEED = 2796.04;
-    static double SWING_SERVO_SPEED = 1.0;
+    final double TURBO_MOTOR_SPEED = 0.9;
+    final double ENCODER_SPEED = 2796.04;
+    final double SWING_SERVO_SPEED = 1.0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -38,6 +40,7 @@ public class NewMain extends LinearOpMode{
         DcMotor bucketSlide = hardwareMap.get(DcMotor.class, "bucketSlide"); //Max extension 2380
         DcMotor platformSlide = hardwareMap.get(DcMotor.class, "platformSlide"); //Max extension 3900
         int platformSlideTargetPos = 0;
+        int bucketSlideTargetPos = 0;
 
         //DcMotor climbSlideFront = hardwareMap.get(DcMotor.class, "motorName");
         //DcMotor climbSlideBack = hardwareMap.get(DcMotor.class, "motorName");
@@ -52,15 +55,16 @@ public class NewMain extends LinearOpMode{
 
 
         //Initialize motors with encoders before starting
-        //bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
-        bucketSlide.setTargetPosition(0);
-        bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //bucketSlide.setTargetPosition(0);
 
-        //platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
-        platformSlide.setTargetPosition(0);
-        platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+
+        platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //platformSlide.setTargetPosition(0);
+        //
+        platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
+        //platformSlide.setTargetPosition(0);
 
 
         waitForStart();
@@ -72,16 +76,16 @@ public class NewMain extends LinearOpMode{
             if(gamepad1.right_bumper) { //Fast speed
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
-                                -gamepad1.left_stick_y, //Left-right
-                                -gamepad1.left_stick_x //Up-down
+                                -gamepad1.left_stick_y * TURBO_MOTOR_SPEED, //Left-right
+                                -gamepad1.left_stick_x * TURBO_MOTOR_SPEED //Up-down
                         ),
-                        -gamepad1.right_stick_x //Heading adjust
+                        -gamepad1.right_stick_x * TURBO_MOTOR_SPEED //Heading adjust
                 ));
             }else{
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
-                                -gamepad1.left_stick_y * 0.3, //Left-right
-                                -gamepad1.left_stick_x * 0.3 //Up-down
+                                -gamepad1.left_stick_y * 0.5, //Left-right
+                                -gamepad1.left_stick_x * 0.5 //Up-down
                         ),
                         -gamepad1.right_stick_x * 0.3 //Heading adjust
                 ));
@@ -89,68 +93,84 @@ public class NewMain extends LinearOpMode{
 
             //Linear slides
             //Bucket slide
+            /*
             if(-gamepad2.left_stick_x < 0) {
                 bucketSlide.setTargetPosition(0);
             }else{
                 bucketSlide.setTargetPosition(2380);
             }
-            bucketSlide.setPower(-gamepad2.left_stick_x);
+            bucketSlide.setPower(-gamepad2.left_stick_x);*/
+
+            bucketSlide.setPower(1.0);
+            bucketSlideTargetPos += (int)(ENCODER_SPEED * deltaTime * -gamepad2.left_stick_x);
+            bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            if(bucketSlideTargetPos > 3500){
+                bucketSlideTargetPos = 3500;
+            }
+            if(bucketSlideTargetPos < 0){
+                bucketSlideTargetPos = 0;
+            }
+
+            bucketSlide.setTargetPosition(bucketSlideTargetPos);
 
             //Platform slide
-            /*
             platformSlide.setPower(1.0);
             platformSlideTargetPos += (int)(ENCODER_SPEED * deltaTime * -gamepad2.right_stick_y);
+            platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             if(platformSlideTargetPos > 3500){
                 platformSlideTargetPos = 3500;
             }
             if(platformSlideTargetPos < 0){
                 platformSlideTargetPos = 0;
-            }*/
-
-            if(-gamepad2.right_stick_y < 0) {
-                platformSlide.setTargetPosition(0);
-            }else{
-                platformSlide.setTargetPosition(3500);
             }
-            platformSlide.setPower(-gamepad2.right_stick_y);
 
-            //platformSlide.setTargetPosition(platformSlideTargetPos);
+            platformSlide.setTargetPosition(platformSlideTargetPos);
 
             telemetry.addData("Platform Slide Position", platformSlide.getCurrentPosition());
             telemetry.addData("Platform Slide Target Position", platformSlideTargetPos);
 
             //Bucket Servo
-            if(gamepad2.right_trigger != 0) {
-                bucketIntake.setPower(1.047);
-            }else if(gamepad2.right_bumper){
-                bucketIntake.setPower(-1.047);
+            if(gamepad2.a) {
+                bucketIntake.setPower(1);
+            }else if(gamepad2.b){
+                bucketIntake.setPower(-1);
             }else{
-                bucketIntake.setPower(0.047);
+                bucketIntake.setPower(0);
             }
 
             //telemetry.addData("Intake trigger", gamepad2.right_trigger);
+            //Min 0.5689 Level 0.2461 Max 0.2
             bucketSwing.setPosition(bucketSwing.getPosition() + (deltaTime * gamepad2.left_stick_y * SWING_SERVO_SPEED));
+
+            if(bucketSwing.getPosition() > 0.5689){
+                bucketSwing.setPosition(0.5689);
+            }else if(bucketSwing.getPosition() < 0.2){
+                bucketSwing.setPosition(0.2);
+            }
+
+            telemetry.addData("bucketSwing", bucketSwing.getPosition());
 
             //Claw Servos
             if(gamepad2.left_bumper){
-                clawGrab.setPosition(0.985); //originally 0.9925
+                clawGrab.setPosition(0.9885); //originally 0.9925
             }else{
                 clawGrab.setPosition(1);
             }
             //clawGrab.setPosition(1.0 - (gamepad2.left_trigger / 20));
 
-            if(gamepad2.right_stick_x > 0.5) {
+            if(gamepad2.right_trigger > 0.2) {
                 clawPivot.setPosition(clawPivot.getPosition() + (deltaTime * SWING_SERVO_SPEED));
 
                 if(clawPivot.getPosition() > 0.39){
-                    clawPivot.setPosition(0.39);
+                    clawPivot.setPosition(0.55);
                 }
-            }else if(gamepad2.right_stick_x < -0.5){
+            }else if(gamepad2.left_trigger > 0.2){
                 clawPivot.setPosition(clawPivot.getPosition() - (deltaTime * SWING_SERVO_SPEED));
 
                 if(clawPivot.getPosition() < 0){
-                    clawPivot.setPosition(0);
+                    clawPivot.setPosition(1);
                 }
             }
 
