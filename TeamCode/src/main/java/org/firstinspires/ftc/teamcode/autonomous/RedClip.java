@@ -25,26 +25,30 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Autonomous(name = "RedClip", group = "Autonomous")
 public class RedClip extends LinearOpMode {
     public class PlatformSlide {
-        private DcMotor platformSlide;
-
-        private int targetPositon = 0;
+        private final DcMotor platformSlide;
 
         public PlatformSlide(HardwareMap hardwareMap){
             platformSlide = hardwareMap.get(DcMotor.class, "platformSlide");
 
-            platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
-            targetPosition = platformSlide.getCurrentPosition();
+            platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            platformSlide.setPower(1.0);
         }
 
         public class MoveToPosition implements Action{
+            private int targetPosition = 0;
+
             public MoveToPosition(int position){
-                targetPositon = position;
+                targetPosition = position;
             }
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet){
-                platformSlide.setTargetPosition(targetPositon);
+                platformSlide.setTargetPosition(targetPosition);
+                while(platformSlide.getCurrentPosition() != targetPosition){
+                    //Run until motor is at the right height
+                }
                 return false;
             }
         }
@@ -61,7 +65,7 @@ public class RedClip extends LinearOpMode {
 
         //Linear slides
         DcMotor bucketSlide = hardwareMap.get(DcMotor.class, "bucketSlide"); //Max extension 2380
-        DcMotor platformSlide = new PlatformSlide(hardwareMap); //Max extension 3900
+        PlatformSlide platformSlide = new PlatformSlide(hardwareMap); //Max extension 3900
 
         //DcMotor climbSlideFront = hardwareMap.get(DcMotor.class, "motorName");
         //DcMotor climbSlideBack = hardwareMap.get(DcMotor.class, "motorName");
@@ -85,7 +89,7 @@ public class RedClip extends LinearOpMode {
                 .strafeTo(new Vector2d(36, -36))
                 .build();
 
-        Action clip2 = drive.actionBuilder(new Pose2d(36, -36, Math.toRadians(90)))
+        Action clip2 = drive.actionBuilder(new Pose2d(36, -36, Math.toRadians(0)))
                 .turn(Math.toRadians(90))
                 .lineToY(-10)
                 .strafeTo(new Vector2d(45, -15)) //Sample 1
@@ -118,8 +122,9 @@ public class RedClip extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        clip1,
+                        //clip1,
                         platformSlide.moveToPosition(2500) //Hanging first clip
+                        //clip2
                 )
         );
     }

@@ -55,15 +55,17 @@ public class NewMain extends LinearOpMode{
 
 
         //Initialize motors with encoders before starting
-        bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //bucketSlide.setTargetPosition(0);
-
+        //bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
         bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+        bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
 
-        platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //platformSlide.setTargetPosition(0);
-        //
-        platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
+        //platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
+        bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+        platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
         //platformSlide.setTargetPosition(0);
 
 
@@ -103,7 +105,6 @@ public class NewMain extends LinearOpMode{
 
             bucketSlide.setPower(1.0);
             bucketSlideTargetPos += (int)(ENCODER_SPEED * deltaTime * -gamepad2.left_stick_x);
-            bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             if(bucketSlideTargetPos > 3500){
                 bucketSlideTargetPos = 3500;
@@ -115,9 +116,8 @@ public class NewMain extends LinearOpMode{
             bucketSlide.setTargetPosition(bucketSlideTargetPos);
 
             //Platform slide
-            platformSlide.setPower(1.0);
+            //platformSlide.setPower(1.0);
             platformSlideTargetPos += (int)(ENCODER_SPEED * deltaTime * -gamepad2.right_stick_y);
-            platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             if(platformSlideTargetPos > 3500){
                 platformSlideTargetPos = 3500;
@@ -126,7 +126,12 @@ public class NewMain extends LinearOpMode{
                 platformSlideTargetPos = 0;
             }
 
-            platformSlide.setTargetPosition(platformSlideTargetPos);
+            if(platformSlideTargetPos < 100 && Math.abs(gamepad2.right_stick_y) < 0.1){
+                platformSlide.setPower(0.0);
+            }else{
+                platformSlide.setPower(1.0);
+                platformSlide.setTargetPosition(platformSlideTargetPos);
+            }
 
             telemetry.addData("Platform Slide Position", platformSlide.getCurrentPosition());
             telemetry.addData("Platform Slide Target Position", platformSlideTargetPos);
@@ -146,8 +151,8 @@ public class NewMain extends LinearOpMode{
 
             if(bucketSwing.getPosition() > 0.5689){
                 bucketSwing.setPosition(0.5689);
-            }else if(bucketSwing.getPosition() < 0.2){
-                bucketSwing.setPosition(0.2);
+            }else if(bucketSwing.getPosition() < 0.1){
+                bucketSwing.setPosition(0.1);
             }
 
             telemetry.addData("bucketSwing", bucketSwing.getPosition());
