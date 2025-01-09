@@ -32,14 +32,15 @@ public class MeepMeepTesting {
                 .splineTo(new Vector2d(35, -40), Math.toRadians(90))
                 .lineToY(-10)
                 .splineTo(new Vector2d(45, -10), Math.toRadians(0))
-                .strafeTo(new Vector2d(45, -59))
-                .lineToY(-50)
-                .splineTo(new Vector2d(36, -59), Math.toRadians(180))
-                .strafeTo(new Vector2d(36, -61))
+                .strafeTo(new Vector2d(45, -55))
+                .lineToY(-47)
+                .splineTo(new Vector2d(36, -45), Math.toRadians(180))
+                .strafeTo(new Vector2d(36,-58))
+                .strafeTo(new Vector2d(36, -55)) //Approach wall
                 //.waitSeconds(1) //Grab clip
                 .build();
 
-        Action clip2Hang = myBot.getDrive().actionBuilder(new Pose2d(36, -61, Math.toRadians(-90)))
+        Action clip2Hang = myBot.getDrive().actionBuilder(new Pose2d(36, -55, Math.toRadians(-90)))
                 .setReversed(true)
                 .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
                 .lineToY(-38)

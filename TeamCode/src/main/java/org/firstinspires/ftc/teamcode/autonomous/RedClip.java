@@ -48,7 +48,7 @@ public class RedClip extends LinearOpMode {
                 platformSlide.setPower(0.5);
                 platformSlide.setTargetPosition(targetPosition);
 
-                while(platformSlide.getCurrentPosition() != targetPosition){
+                while(Math.abs(platformSlide.getCurrentPosition() - targetPosition) > 10){
                     //wait for slide to reach height
                 }
 
@@ -171,14 +171,15 @@ public class RedClip extends LinearOpMode {
                 .splineTo(new Vector2d(35, -40), Math.toRadians(90))
                 .lineToY(-10)
                 .splineTo(new Vector2d(45, -10), Math.toRadians(0))
-                .strafeTo(new Vector2d(45, -59))
-                .lineToY(-50)
-                .splineTo(new Vector2d(36, -59), Math.toRadians(180))
-                .strafeTo(new Vector2d(36, -61))
+                .strafeTo(new Vector2d(45, -55))
+                .lineToY(-47)
+                .splineTo(new Vector2d(36, -45), Math.toRadians(180))
+                .strafeTo(new Vector2d(36,-58))
+                .strafeTo(new Vector2d(36, -55)) //Approach wall
                 //.waitSeconds(1) //Grab clip
                 .build();
 
-        Action clip2Hang = drive.actionBuilder(new Pose2d(36, -61, Math.toRadians(-90)))
+        Action clip2Hang = drive.actionBuilder(new Pose2d(36, -55, Math.toRadians(-90)))
                 .setReversed(true)
                 .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
                 .lineToY(-38)
@@ -202,13 +203,13 @@ public class RedClip extends LinearOpMode {
 
                         clip2,
                         //Grab clip from wall
-                        platformSlide.moveToPosition(200),
+                        platformSlide.moveToPosition(0),
                         clawServo.closeClaw(),
                         platformSlide.moveToPosition(1000),
 
                         clip2Hang,
                         clawPivot.moveToPosition(0.2711), //Originally 0.3011
-                        platformSlide.moveToPosition(2100), //Hanging first clip
+                        platformSlide.moveToPosition(2100), //Hanging second clip
                         clip2HangComplete,
                         platformSlide.moveToPosition(900),
                         clawServo.openClaw()
