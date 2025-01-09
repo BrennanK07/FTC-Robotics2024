@@ -45,38 +45,13 @@ public class RedClip extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet){
-                platformSlide.setPower(1.0);
+                platformSlide.setPower(0.5);
                 platformSlide.setTargetPosition(targetPosition);
 
                 while(platformSlide.getCurrentPosition() != targetPosition){
                     //wait for slide to reach height
                 }
 
-                return false;
-            }
-        }
-
-        public class ClipSample implements Action {
-            private final ClawServo clawServo;
-
-            // Constructor to accept a ClawServo object
-            public ClipSample(ClawServo clawServo) {
-                this.clawServo = clawServo;
-            }
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                platformSlide.setPower(0.5);
-
-                // Start the loop to lower the slide
-                while (platformSlide.getCurrentPosition() > 0) {
-                    if (platformSlide.getCurrentPosition() < 1200) {
-                        // Open the claw when the slide reaches 1200 ticks
-                        clawServo.openClaw().run(packet);
-                        break;  // Break the loop after opening the claw to avoid repeated actions
-                    }
-                }
-                platformSlide.setPower(0);  // Stop the slide motor after reaching position
                 return false;
             }
         }
@@ -98,9 +73,9 @@ public class RedClip extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet){
                 clawServo.setPosition(0.9885);
 
-                while(clawServo.getPosition() != 0.9885){
+                //while(clawServo.getPosition() != 0.9885){
                     //wait for servo
-                }
+                //}
 
                 return false;
             }
@@ -111,9 +86,9 @@ public class RedClip extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet){
                 clawServo.setPosition(1.0);
 
-                while(clawServo.getPosition() != 1.0){
+                //while(clawServo.getPosition() != 1.0){
                     //wait for servo
-                }
+                //}
 
                 return false;
             }
@@ -161,7 +136,7 @@ public class RedClip extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d initialPose = new Pose2d(-11.5, -61, Math.toRadians(90));
+        Pose2d initialPose = new Pose2d(11.5, -61, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
         //Linear slides
@@ -176,9 +151,6 @@ public class RedClip extends LinearOpMode {
         ClawPivot clawPivot = new ClawPivot(hardwareMap);
         ClawServo clawServo = new ClawServo(hardwareMap);
 
-        // Create ClipSample action
-        Action clipSampleAction = platformSlide.new ClipSample(clawServo);
-
         //CRServos
         CRServo bucketIntake = hardwareMap.get(CRServo.class, "bucketIntake");
 
@@ -187,39 +159,32 @@ public class RedClip extends LinearOpMode {
         bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
 
         Action clip1 = drive.actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
-                .splineTo(new Vector2d(0, -36), Math.toRadians(90))
-                .waitSeconds(1)
+                .splineTo(new Vector2d(0, -38), Math.toRadians(90))
                 .build();
 
-        Action clip2 = drive.actionBuilder(new Pose2d(0, -36, Math.toRadians(90)))
+        Action clip1Hang = drive.actionBuilder(new Pose2d(0, -38, Math.toRadians(90)))
+                .splineTo(new Vector2d(0, -34.5), Math.toRadians(90))
+                .build();
+
+        Action clip2 = drive.actionBuilder(new Pose2d(0, -34.5, Math.toRadians(90)))
                 .setReversed(true)
-                .splineTo(new Vector2d(35, -50), Math.toRadians(90))
-                .lineToY(-61)
-                .waitSeconds(1) //Grab clip
+                .splineTo(new Vector2d(35, -40), Math.toRadians(90))
+                .lineToY(-10)
+                .splineTo(new Vector2d(45, -10), Math.toRadians(0))
+                .strafeTo(new Vector2d(45, -59))
+                .lineToY(-50)
+                .splineTo(new Vector2d(36, -59), Math.toRadians(180))
+                .strafeTo(new Vector2d(36, -61))
+                //.waitSeconds(1) //Grab clip
                 .build();
 
         Action clip2Hang = drive.actionBuilder(new Pose2d(36, -61, Math.toRadians(-90)))
                 .setReversed(true)
                 .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
-                .lineToY(-36)
+                .lineToY(-38)
                 .build();
 
-        Action pushClips = drive.actionBuilder(new Pose2d(0, -36, Math.toRadians(90)))
-                .turn(Math.toRadians(-90))
-                .lineToX(36)
-                .turn(Math.toRadians(90))
-                .lineToY(-10)
-                .strafeTo(new Vector2d(45, -15)) //Sample 1
-                .strafeTo(new Vector2d(45, -55))
-                .strafeTo(new Vector2d(45, -10))
-
-                .splineTo(new Vector2d(36, -61), Math.toRadians(-90)) //Grabbing sample 1
-                .build();
-
-        Action clip3 = drive.actionBuilder(new Pose2d(36, -61, Math.toRadians(-90)))
-                //Grab sample
-                .lineToY(-50)
-                .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
+        Action clip2HangComplete = drive.actionBuilder(new Pose2d(0, -38, Math.toRadians(-90)))
                 .lineToY(-36)
                 .build();
 
@@ -227,18 +192,29 @@ public class RedClip extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        clawServo.closeClaw(),
                         clip1,
-                        clawPivot.moveToPosition(0.3011),
-                        platformSlide.moveToPosition(2500), //Hanging first clip
-                        platformSlide.moveToPosition(0),
+                        clawPivot.moveToPosition(0.2711), //Originally 0.3011
+                        platformSlide.moveToPosition(2100), //Hanging first clip
+                        clip1Hang,
+                        platformSlide.moveToPosition(900),
                         clawServo.openClaw(),
 
                         clip2,
                         //Grab clip from wall
-                        clip2Hang,
+                        platformSlide.moveToPosition(200),
+                        clawServo.closeClaw(),
+                        platformSlide.moveToPosition(1000),
 
-                        pushClips, //Block pushing into zone
-                        clip3
+                        clip2Hang,
+                        clawPivot.moveToPosition(0.2711), //Originally 0.3011
+                        platformSlide.moveToPosition(2100), //Hanging first clip
+                        clip2HangComplete,
+                        platformSlide.moveToPosition(900),
+                        clawServo.openClaw()
+
+                        //pushClips, //Block pushing into zone
+                        //clip3
                 )
         );
     }
