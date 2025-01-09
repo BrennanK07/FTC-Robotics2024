@@ -58,15 +58,23 @@ public class NewMain extends LinearOpMode{
         //bucketSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
         bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+        bucketSlideTargetPos = bucketSlide.getCurrentPosition();
         bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
 
         //platformSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
-        bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+        platformSlide.setTargetPosition(bucketSlide.getCurrentPosition());
+        platformSlideTargetPos = platformSlide.getCurrentPosition();
         platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //platformSlide.setTargetPosition(platformSlide.getCurrentPosition());
         //platformSlide.setTargetPosition(0);
+
+        //Init motors / servos
+        bucketSwing.setPosition(bucketSwing.getPosition());
+        clawPivot.setPosition(clawPivot.getPosition());
+        clawGrab.setPosition(clawGrab.getPosition());
+
 
 
         waitForStart();
@@ -166,13 +174,13 @@ public class NewMain extends LinearOpMode{
             //clawGrab.setPosition(1.0 - (gamepad2.left_trigger / 20));
 
             if(gamepad2.right_trigger > 0.2) {
-                clawPivot.setPosition(clawPivot.getPosition() + (deltaTime * SWING_SERVO_SPEED));
+                clawPivot.setPosition(clawPivot.getPosition() + (deltaTime * SWING_SERVO_SPEED * 0.5));
 
                 if(clawPivot.getPosition() > 0.39){
                     clawPivot.setPosition(0.55);
                 }
             }else if(gamepad2.left_trigger > 0.2){
-                clawPivot.setPosition(clawPivot.getPosition() - (deltaTime * SWING_SERVO_SPEED));
+                clawPivot.setPosition(clawPivot.getPosition() - (deltaTime * SWING_SERVO_SPEED * 0.5));
 
                 if(clawPivot.getPosition() < 0){
                     clawPivot.setPosition(1);
@@ -180,6 +188,9 @@ public class NewMain extends LinearOpMode{
             }
 
             telemetry.addData("Claw Pivot Position", clawPivot.getPosition() /*+ (deltaTime * SWING_SERVO_SPEED)*/);
+
+            //Macros
+
 
             //Telemetry
             drive.updatePoseEstimate();
