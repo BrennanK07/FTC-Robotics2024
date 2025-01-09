@@ -1,6 +1,8 @@
 package com.example.meepmeeptesting;
 
+import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
@@ -15,22 +17,28 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .build();
 
-        /*
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-11.5, -61, Math.toRadians(90)))
-                .splineTo(new Vector2d(-50, -50), Math.toRadians(225))
-                .waitSeconds(3)
-                .splineTo(new Vector2d(-25, 0), Math.toRadians(0))
-                .waitSeconds(3)
-                .lineToX(-35)
-                .splineTo(new Vector2d(-50, -50), Math.toRadians(45))
-                .waitSeconds(3)
-                .build());*/
-
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
+        Action clip1 = myBot.getDrive().actionBuilder(new Pose2d(11.5, -61, Math.toRadians(90)))
                 .splineTo(new Vector2d(0, -36), Math.toRadians(90))
                 .waitSeconds(1)
+                .build();
+
+        Action clip2 = myBot.getDrive().actionBuilder(new Pose2d(0, -36, Math.toRadians(90)))
+                .setReversed(true)
+                .splineTo(new Vector2d(35, -50), Math.toRadians(90))
+                .lineToY(-61)
+                .waitSeconds(1) //Grab clip
+                .build();
+
+        Action clip2Hang = myBot.getDrive().actionBuilder(new Pose2d(36, -61, Math.toRadians(-90)))
+                .setReversed(true)
+                .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
+                .lineToY(-36)
+                .build();
+
+        /*
+        Action pushClips = drive.actionBuilder(new Pose2d(0, -36, Math.toRadians(0)))
                 .turn(Math.toRadians(-90))
-                .strafeTo(new Vector2d(36, -36))
+                .lineToX(36)
                 .turn(Math.toRadians(90))
                 .lineToY(-10)
                 .strafeTo(new Vector2d(45, -15)) //Sample 1
@@ -57,7 +65,29 @@ public class MeepMeepTesting {
                 //Grab sample function
                 .strafeTo(new Vector2d(0, -36))
                 //Clip sample to top bar
-                .build());
+                .build();*/ //Complete 5 clips route
+
+        Action pushClips = myBot.getDrive().actionBuilder(new Pose2d(0, -36, Math.toRadians(90)))
+                .turn(Math.toRadians(-90))
+                .lineToX(36)
+                .turn(Math.toRadians(90))
+                .lineToY(-10)
+                .strafeTo(new Vector2d(45, -15)) //Sample 1
+                .strafeTo(new Vector2d(45, -55))
+                .strafeTo(new Vector2d(45, -10))
+
+                .splineTo(new Vector2d(36, -61), Math.toRadians(-90)) //Grabbing sample 1
+                .build();
+
+        Action clip3 = myBot.getDrive().actionBuilder(new Pose2d(36, -61, Math.toRadians(-90)))
+                //Grab sample
+                .lineToY(-50)
+                .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
+                .lineToY(-36)
+                .build();
+
+
+        myBot.runAction((new SequentialAction(clip1, clip2, clip2Hang, pushClips, clip3)));
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_INTO_THE_DEEP_JUICE_DARK)
                 .setDarkMode(true)
