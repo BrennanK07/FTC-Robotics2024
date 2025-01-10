@@ -4,11 +4,15 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.AngularVelConstraint;
+import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TrajectoryBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -20,6 +24,8 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import java.util.Vector;
 
 @Config
 @Autonomous(name = "RedClip", group = "Autonomous")
@@ -103,7 +109,7 @@ public class RedClip extends LinearOpMode {
     }
 
     public static class ClawPivot {
-        private final Servo clawPivot;
+        public final Servo clawPivot;
 
         public ClawPivot(HardwareMap hardwareMap){
             clawPivot = hardwareMap.get(Servo.class, "clawPivot");
@@ -165,31 +171,48 @@ public class RedClip extends LinearOpMode {
                 .setReversed(true)
                 .splineTo(new Vector2d(35, -40), Math.toRadians(90))
                 .lineToY(-10)
-                .splineTo(new Vector2d(45, -10), Math.toRadians(0))
-                .strafeTo(new Vector2d(45, -55))
+                .splineTo(new Vector2d(48, -10), Math.toRadians(0))
+                .strafeTo(new Vector2d(48, -55))
                 .lineToY(-47)
                 .splineTo(new Vector2d(36, -45), Math.toRadians(180))
-                .strafeTo(new Vector2d(36,-54.75))
+                //.strafeTo(new Vector2d(36, -55)) //Approach wall
+                //.waitSeconds(1) //Grab clip
+                .strafeTo(new Vector2d(36, -50))
+                .build();
+
+        Action clip2Part2 = drive.actionBuilder(new Pose2d(36, -50, Math.toRadians(-90)))
+                .strafeTo(new Vector2d(36,-54.95))
+                .build();
+
+        Action clip2Hang = drive.actionBuilder(new Pose2d(36, -54.95, Math.toRadians(-90)))
+                .setReversed(true)
+                .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
+                .lineToY(-34.25)
+                .build();
+
+        Action clip3 = drive.actionBuilder(new Pose2d(0, -34.25, Math.toRadians(90)))
+                .setReversed(true)
+                .splineTo(new Vector2d(35, -40), Math.toRadians(90))
+                .lineToY(-5)
+                .splineTo(new Vector2d(51, -5), Math.toRadians(0))
+                .strafeTo(new Vector2d(51, -50))
+                //.lineToY(-47)
+                //.splineTo(new Vector2d(36, -45), Math.toRadians(180))
+                //.strafeTo(new Vector2d(36,-54.75))
                 //.strafeTo(new Vector2d(36, -55)) //Approach wall
                 //.waitSeconds(1) //Grab clip
                 .build();
 
-        Action clip2Hang = drive.actionBuilder(new Pose2d(36, -54.75, Math.toRadians(-90)))
-                .setReversed(true)
-                .splineTo(new Vector2d(0, -50), Math.toRadians(-90))
-                .lineToY(-35.5)
-                .build();
-
-        Action clip3 = drive.actionBuilder(new Pose2d(0, -35.5, Math.toRadians(90)))
-                .setReversed(true)
-                .splineTo(new Vector2d(36, -45), Math.toRadians(90))
-                .strafeTo(new Vector2d(36, -54.75))
-                //.strafeTo(new Vector2d(36, -55)) //Approach wall
-                .build();
-
         Action waitForClip = drive.actionBuilder(new Pose2d(36, -55, Math.toRadians(-90)))
-                .waitSeconds(1)
+                .waitSeconds(0.5)
                 .build();
+
+        Action waitForClipB = drive.actionBuilder(new Pose2d(36, -55, Math.toRadians(-90)))
+                .waitSeconds(0.5)
+                .build();
+
+        clawServo.clawServo.setPosition(1.0);
+        clawPivot.clawPivot.setPosition(0.62);
 
         waitForStart();
 
@@ -205,11 +228,15 @@ public class RedClip extends LinearOpMode {
                         clawServo.openClaw(),
 
                         clip2,
-                        //Grab clip from wall
-                        clawPivot.moveToPosition(0.195),
+                        clip2Part2,
                         platformSlide.moveToPosition(0),
+                        clawPivot.moveToPosition(0.225),
+                        //Grab clip from wall
+                        //platformSlide.moveToPosition(0),
                         waitForClip,
                         clawServo.closeClaw(),
+                        waitForClipB,
+                        platformSlide.moveToPosition(400),
                         clawPivot.moveToPosition(0.5),
                         //platformSlide.moveToPosition(850),
 
@@ -221,20 +248,7 @@ public class RedClip extends LinearOpMode {
                         platformSlide.moveToPosition(850),
                         clawServo.openClaw(),
 
-                        clip3,
-                        //Grab clip from wall
-                        platformSlide.moveToPosition(0),
-                        clawPivot.moveToPosition(0.195),
-                        clawServo.closeClaw(),
-                        clawPivot.moveToPosition(0.2711),
-                        platformSlide.moveToPosition(850),
-
-                        clip2Hang,
-                        clawPivot.moveToPosition(0.2711), //Originally 0.3011
-                        platformSlide.moveToPosition(2050), //Hanging second clip
-                        //clip2HangComplete,
-                        platformSlide.moveToPosition(850),
-                        clawServo.openClaw()
+                        clip3
                 )
         );
     }
