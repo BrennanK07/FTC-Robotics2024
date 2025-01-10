@@ -185,8 +185,15 @@ public class RedClip extends LinearOpMode {
                 .lineToY(-38)
                 .build();
 
-        Action clip2HangComplete = drive.actionBuilder(new Pose2d(0, -38, Math.toRadians(-90)))
+        Action clip2HangComplete = drive.actionBuilder(new Pose2d(0, -38, Math.toRadians(90)))
                 .lineToY(-36)
+                .build();
+
+        Action clip3 = drive.actionBuilder(new Pose2d(0, -36, Math.toRadians(90)))
+                .setReversed(true)
+                .splineTo(new Vector2d(36, -45), Math.toRadians(90))
+                .strafeTo(new Vector2d(36, -58))
+                .strafeTo(new Vector2d(36, -55)) //Approach wall
                 .build();
 
         waitForStart();
@@ -212,10 +219,16 @@ public class RedClip extends LinearOpMode {
                         platformSlide.moveToPosition(2100), //Hanging second clip
                         clip2HangComplete,
                         platformSlide.moveToPosition(900),
-                        clawServo.openClaw()
+                        clawServo.openClaw(),
 
-                        //pushClips, //Block pushing into zone
-                        //clip3
+                        clip3,
+
+                        clip2Hang,
+                        clawPivot.moveToPosition(0.2711), //Originally 0.3011
+                        platformSlide.moveToPosition(2100), //Hanging second clip
+                        clip2HangComplete,
+                        platformSlide.moveToPosition(900),
+                        clawServo.openClaw()
                 )
         );
     }
