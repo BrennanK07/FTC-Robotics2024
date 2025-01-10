@@ -157,10 +157,12 @@ public class NewMain extends LinearOpMode{
             //Min 0.5689 Level 0.2461 Max 0.2
             bucketSwing.setPosition(bucketSwing.getPosition() + (deltaTime * gamepad2.left_stick_y * SWING_SERVO_SPEED));
 
-            if(bucketSwing.getPosition() > 0.5689){
-                bucketSwing.setPosition(0.5689);
-            }else if(bucketSwing.getPosition() < 0.1){
-                bucketSwing.setPosition(0.1);
+            if(gamepad2.left_stick_y != 0) {
+                if (bucketSwing.getPosition() > 0.5689) {
+                    bucketSwing.setPosition(0.5689);
+                } else if (bucketSwing.getPosition() < 0.1) {
+                    bucketSwing.setPosition(0.1);
+                }
             }
 
             telemetry.addData("bucketSwing", bucketSwing.getPosition());

@@ -37,11 +37,9 @@ public class MotorCalibration extends LinearOpMode {
         platformSlide.setTargetPosition(0);
         platformSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        waitForStart();
+        telemetry.addData("Motors recalibrated", "Press Start to exit");
+        telemetry.update();
 
-        while(!gamepad1.a){
-            telemetry.addData("Motors recalibrated", "Press A to exit");
-            telemetry.update();
-        }
+        waitForStart();
     }
 }
