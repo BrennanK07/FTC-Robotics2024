@@ -31,20 +31,6 @@ public class NewMain extends LinearOpMode{
 
     final double TURBO_MOTOR_SPEED = 0.9;
 
-    public class Joystick{
-        public double x;
-        public double y;
-
-        public Joystick(double x, double y){
-            this.x = x;
-            this.y = y;
-        }
-
-        public Joystick(){
-            this(0, 0);
-        }
-    }
-
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -52,16 +38,51 @@ public class NewMain extends LinearOpMode{
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         //Linear slides
-        DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftClimbSlide");
-        DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightClimbSlide");
+        DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftBack");
+        DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightFront");
+
+        int lastPosition = 0;
+
+        class PID{
+            double kP = 1.0;
+            double kD = 0.005;
+            double kI = 0.05;
+
+            double prevPos;
+
+            double proprtional;
+            double derivative;
+            double integral;
+
+            public double power;
+
+            public PID(double currentPos){
+                prevPos = currentPos;
+            }
+
+            public void updatePID(double currentPos, double targetPos, double deltaTime){
+                proprtional = targetPos - currentPos;
+                integral += currentPos;
+
+                derivative = (currentPos - prevPos) / deltaTime;
+
+                prevPos = currentPos;
+
+                calculatePID();
+            }
+
+            public void calculatePID(){
+                power = (kP * proprtional) + (kD * derivative) + (kI * integral);
+            }
+        }
 
         //Servos
-        Servo bucketSwing = hardwareMap.get(Servo.class, "bucketSwing");
-        Servo clawPivot = hardwareMap.get(Servo.class, "clawPivot");
-        Servo clawGrab = hardwareMap.get(Servo.class, "clawGrab");
+        //Servo bucketSwing = hardwareMap.get(Servo.class, "bucketSwing");
+        //Servo clawPivot = hardwareMap.get(Servo.class, "clawPivot");
+        //Servo clawGrab = hardwareMap.get(Servo.class, "clawGrab");
 
         //CRServos
-        CRServo bucketIntake = hardwareMap.get(CRServo.class, "bucketIntake");
+        //CRServo bucketIntake = hardwareMap.get(CRServo.class, "bucketIntake");
 
 
         //Initialize motors with encoders before starting
@@ -70,26 +91,25 @@ public class NewMain extends LinearOpMode{
         //bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         leftClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftClimbSlide.setDirection(DcMotorEx.Direction.FORWARD);
+        leftClimbSlide.setTargetPosition(0);
+        leftClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         rightClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightClimbSlide.setDirection(DcMotorEx.Direction.FORWARD);
+        rightClimbSlide.setTargetPosition(0);
+        rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        PID leftClimbPID = new PID(leftClimbSlide.getCurrentPosition());
+        PID rightClimbPID = new PID(rightClimbSlide.getCurrentPosition());
+
+        int verticalSlideTargetPos = 0;
+        double verticalSlideMaxSpeed = 2796.04;
 
         //Init motors / servos
-
-        //Controller Inputs
-        Joystick leftStick2 = new Joystick();
-        Joystick rightStick2 = new Joystick();
 
         waitForStart();
 
         while (opModeIsActive()) {
             updateDeltaTime();
-
-            //Poll inputs
-            leftStick2 = new Joystick(gamepad2.left_stick_x, gamepad2.left_stick_y);
-            rightStick2 = new Joystick(gamepad2.right_stick_x, gamepad2.right_stick_y);
-
 
             //Drive motors
             if(gamepad1.right_bumper) { //Fast speed
@@ -111,19 +131,54 @@ public class NewMain extends LinearOpMode{
             }
 
             //Slides and Servos
-            if(Math.abs(leftStick2.y) > 0.2){
-                leftClimbSlide.setPower(leftStick2.y);
-                rightClimbSlide.setPower(leftStick2.y);
+            leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), lastPosition, deltaTime);
+            rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), lastPosition, deltaTime);
+
+            if(Math.abs(gamepad2.right_stick_y) < 0.2){
+                //Hold position
+                leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                leftClimbSlide.setTargetPosition(lastPosition);
+                rightClimbSlide.setTargetPosition(lastPosition);
+
+                if(lastPosition < -100) {
+                    leftClimbSlide.setPower(leftClimbPID.power);
+                    rightClimbSlide.setPower(rightClimbPID.power);
+                }else{
+                    leftClimbSlide.setPower(0);
+                    rightClimbSlide.setPower(0);
+                }
             }else{
-                leftClimbSlide.setPower(0);
-                rightClimbSlide.setPower(0);
+                //Hold position
+                leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                leftClimbSlide.setPower(gamepad2.right_stick_y);
+                rightClimbSlide.setPower(gamepad2.right_stick_y);
+
+                lastPosition = leftClimbSlide.getCurrentPosition();
+
+                if(lastPosition < -3200){
+                    lastPosition = -3200;
+                }
+
+                if(lastPosition > 0){
+                    lastPosition = 0;
+                }
             }
+
+            telemetry.addData("Vertical Slide Target Position", verticalSlideTargetPos);
+
+            telemetry.addData("Vertical Slide Position (L / R)", leftClimbSlide.getCurrentPosition() + " / " + rightClimbSlide.getCurrentPosition());
 
             //Macros
 
 
             //Telemetry
             drive.updatePoseEstimate();
+
+            telemetry.addData("c2 Right Stick", gamepad2.right_stick_x + ", " + gamepad2.right_stick_y);
 
             telemetry.addData("deltaTime (s)", deltaTime);
 
