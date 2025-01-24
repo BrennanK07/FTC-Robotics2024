@@ -19,17 +19,17 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Drawing;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.TankDrive;
+import org.firstinspires.ftc.teamcode.tools.ControllerInputSystem;
+import org.firstinspires.ftc.teamcode.tools.PIDTuner;
+import static org.firstinspires.ftc.teamcode.tools.Util22156.*;
 
 import java.util.Vector;
 
 @TeleOp(name = "Competition TeleOp")
 
 public class NewMain extends LinearOpMode{
-    double oldUnixTimestamp = System.nanoTime() * 1e-9;
-    double currentUnixTimestamp = System.nanoTime() * 1e-9;
-    double deltaTime = System.nanoTime() * 1e-9;
-
     final double TURBO_MOTOR_SPEED = 0.9;
+    boolean SHOW_DEBUG_VALUES = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -37,58 +37,12 @@ public class NewMain extends LinearOpMode{
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
+        ControllerInputSystem controllerSysA = new ControllerInputSystem(gamepad1);
+        ControllerInputSystem controllerSysB = new ControllerInputSystem(gamepad2);
+
         //Linear slides
         DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftBack");
         DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightFront");
-
-        int lastPosition = 0;
-
-        class PID{
-            double kP = 1.0;
-            double kD = 0.005;
-            double kI = 0.05;
-
-            double prevPos;
-
-            double proprtional;
-            double derivative;
-            double integral;
-
-            public double power;
-
-            public PID(double currentPos){
-                prevPos = currentPos;
-            }
-
-            public void updatePID(double currentPos, double targetPos, double deltaTime){
-                proprtional = targetPos - currentPos;
-                integral += currentPos;
-
-                derivative = (currentPos - prevPos) / deltaTime;
-
-                prevPos = currentPos;
-
-                calculatePID();
-            }
-
-            public void calculatePID(){
-                power = (kP * proprtional) + (kD * derivative) + (kI * integral);
-            }
-        }
-
-        //Servos
-        //Servo bucketSwing = hardwareMap.get(Servo.class, "bucketSwing");
-        //Servo clawPivot = hardwareMap.get(Servo.class, "clawPivot");
-        //Servo clawGrab = hardwareMap.get(Servo.class, "clawGrab");
-
-        //CRServos
-        //CRServo bucketIntake = hardwareMap.get(CRServo.class, "bucketIntake");
-
-
-        //Initialize motors with encoders before starting
-        //bucketSlide.setTargetPosition(bucketSlide.getCurrentPosition());
-        //bucketSlideTargetPos = bucketSlide.getCurrentPosition();
-        //bucketSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         leftClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftClimbSlide.setTargetPosition(0);
@@ -98,11 +52,14 @@ public class NewMain extends LinearOpMode{
         rightClimbSlide.setTargetPosition(0);
         rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        PID leftClimbPID = new PID(leftClimbSlide.getCurrentPosition());
-        PID rightClimbPID = new PID(rightClimbSlide.getCurrentPosition());
+        PIDTuner leftClimbPID = new PIDTuner(leftClimbSlide.getCurrentPosition());
+        PIDTuner rightClimbPID = new PIDTuner(rightClimbSlide.getCurrentPosition());
 
-        int verticalSlideTargetPos = 0;
-        double verticalSlideMaxSpeed = 2796.04;
+        double verticalSlideTargetPos = 0;
+        int lastPosition = 0;
+
+        final double MAX_SPEED_MULTIPLIER = 0.5;
+        final double VERT_SLIDE_MAX_SPEED = 2796.04 * MAX_SPEED_MULTIPLIER;
 
         //Init motors / servos
 
@@ -111,7 +68,10 @@ public class NewMain extends LinearOpMode{
         while (opModeIsActive()) {
             updateDeltaTime();
 
-            //Drive motors
+            controllerSysA.updatePressedButtons();
+            controllerSysB.updatePressedButtons();
+
+            //Drive motors thru roadrunner
             if(gamepad1.right_bumper) { //Fast speed
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
@@ -131,8 +91,8 @@ public class NewMain extends LinearOpMode{
             }
 
             //Slides and Servos
-            leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), lastPosition, deltaTime);
-            rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), lastPosition, deltaTime);
+            leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
+            rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
 
             if(Math.abs(gamepad2.right_stick_y) < 0.2){
                 //Hold position
@@ -150,27 +110,22 @@ public class NewMain extends LinearOpMode{
                     rightClimbSlide.setPower(0);
                 }
             }else{
-                //Hold position
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-                leftClimbSlide.setPower(gamepad2.right_stick_y);
-                rightClimbSlide.setPower(gamepad2.right_stick_y);
+                leftClimbSlide.setPower(leftClimbPID.power);
+                rightClimbSlide.setPower(rightClimbPID.power);
 
                 lastPosition = leftClimbSlide.getCurrentPosition();
 
-                if(lastPosition < -3200){
-                    lastPosition = -3200;
-                }
+                lastPosition = clamp(lastPosition, -3100, 0);
 
-                if(lastPosition > 0){
-                    lastPosition = 0;
-                }
+                verticalSlideTargetPos += gamepad2.right_stick_y * VERT_SLIDE_MAX_SPEED * deltaTime;
+                verticalSlideTargetPos = clamp(verticalSlideTargetPos, -3100, 0);
             }
 
-            telemetry.addData("Vertical Slide Target Position", verticalSlideTargetPos);
-
-            telemetry.addData("Vertical Slide Position (L / R)", leftClimbSlide.getCurrentPosition() + " / " + rightClimbSlide.getCurrentPosition());
+            telemetry.addData("VerticalSlides/Target Position", verticalSlideTargetPos);
+            telemetry.addData("VerticalSlides/Positions", leftClimbSlide.getCurrentPosition() + " " + rightClimbSlide.getCurrentPosition());
 
             //Macros
 
@@ -178,13 +133,22 @@ public class NewMain extends LinearOpMode{
             //Telemetry
             drive.updatePoseEstimate();
 
-            telemetry.addData("c2 Right Stick", gamepad2.right_stick_x + ", " + gamepad2.right_stick_y);
+            if(gamepad1.left_bumper && gamepad1.right_bumper){
+                if(!controllerSysA.getPressedButtons().contains("Left Bumper")){ //Stops multi activation on button hold
+                    SHOW_DEBUG_VALUES = !SHOW_DEBUG_VALUES;
+                }
+            }
 
-            telemetry.addData("deltaTime (s)", deltaTime);
+            if(SHOW_DEBUG_VALUES) {
+                debugControllers(telemetry, controllerSysA, controllerSysB);
+            }
 
-            telemetry.addData("x", drive.pose.position.x);
-            telemetry.addData("y", drive.pose.position.y);
-            telemetry.addData("heading (deg)", Math.toDegrees(drive.pose.heading.toDouble()));
+            telemetry.addData("General/deltaTime (s)", deltaTime);
+
+            telemetry.addData("RoadrunnerPos/x", drive.pose.position.x);
+            telemetry.addData("RoadrunnerPos/y", drive.pose.position.y);
+            telemetry.addData("RoadrunnerPos/heading (deg)", Math.toDegrees(drive.pose.heading.toDouble()));
+            telemetry.addData("RoadrunnerPos/heading (rad)", drive.pose.heading.toDouble());
             telemetry.update();
 
             TelemetryPacket packet = new TelemetryPacket();
@@ -192,12 +156,5 @@ public class NewMain extends LinearOpMode{
             Drawing.drawRobot(packet.fieldOverlay(), drive.pose);
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
         }
-    }
-
-    private void updateDeltaTime(){
-        oldUnixTimestamp = currentUnixTimestamp;
-        currentUnixTimestamp = System.nanoTime()* 1e-9;
-
-        deltaTime = currentUnixTimestamp - oldUnixTimestamp;
     }
 }
