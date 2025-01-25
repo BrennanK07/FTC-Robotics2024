@@ -1,10 +1,12 @@
 package com.example.meepmeeptesting;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Trajectory;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.noahbres.meepmeep.MeepMeep;
@@ -25,18 +27,20 @@ public class MeepMeepTesting {
                 .setConstraints(100, 100, Math.toRadians(180), Math.toRadians(180), 15) //kV 60, kA 60
                 .build();
 
-        Pose2d startPose = new Pose2d(11.8, -61.7, Math.toRadians(90));  // Starting position
+
+
+        Pose2d startPose = new Pose2d(11.8, -61.7, Math.toRadians(-90));  // Starting position
 
         TrajectoryActionBuilder specimen1 = myBot.getDrive().actionBuilder(startPose)
                 .lineToY(-34);
 
-        TrajectoryActionBuilder pushSamples = myBot.getDrive().actionBuilder(new Pose2d(11.8, -34, Math.toRadians(90)))
+        TrajectoryActionBuilder pushSamples = myBot.getDrive().actionBuilder(new Pose2d(11.8, -34, Math.toRadians(-90)))
                 .setTangent(Math.toRadians(0))
-                .lineToX(34)
+                .lineToX(36)
                 .setTangent(Math.toRadians(90))
                 .lineToY(-10)
                 .setTangent(Math.toRadians(0))
-                .lineToX(48)
+                .lineToXLinearHeading(48, Math.toRadians(90))
                 //Push first spikezone sample
                 .setTangent(Math.toRadians(90))
                 .lineToY(-55)
@@ -56,9 +60,33 @@ public class MeepMeepTesting {
 
         TrajectoryActionBuilder grabSpecimen2 = myBot.getDrive().actionBuilder(new Pose2d(61, -45, Math.toRadians(90)))
                 .setTangent(Math.toRadians(0))
-                .lineToXLinearHeading(35, Math.toRadians(-90))
+                .lineToX(35)
                 .setTangent(Math.toRadians(90))
                 .lineToY(-61.7);
+
+        TrajectoryActionBuilder clipSpecimen2 = myBot.getDrive().actionBuilder(new Pose2d(35, -61.7, Math.toRadians(90)))
+                .strafeToLinearHeading(new Vector2d(10, -34), Math.toRadians(-90));
+
+        TrajectoryActionBuilder grabSpecimen3 = myBot.getDrive().actionBuilder(new Pose2d(10, -34, Math.toRadians(-90)))
+                .strafeToLinearHeading(new Vector2d(35, -61.7), Math.toRadians(90));
+
+        TrajectoryActionBuilder clipSpecimen3 = myBot.getDrive().actionBuilder(new Pose2d(35, -61.7, Math.toRadians(90)))
+                .strafeToLinearHeading(new Vector2d(5, -34), Math.toRadians(-90));
+
+        TrajectoryActionBuilder grabSpecimen4 = myBot.getDrive().actionBuilder(new Pose2d(5, -34, Math.toRadians(-90)))
+                .strafeToLinearHeading(new Vector2d(35, -61.7), Math.toRadians(90));
+
+        TrajectoryActionBuilder clipSpecimen4 = myBot.getDrive().actionBuilder(new Pose2d(35, -61.7, Math.toRadians(90)))
+                .strafeToLinearHeading(new Vector2d(0, -34), Math.toRadians(-90));
+
+        TrajectoryActionBuilder grabSpecimen5 = myBot.getDrive().actionBuilder(new Pose2d(0, -34, Math.toRadians(-90)))
+                .strafeToLinearHeading(new Vector2d(35, -61.7), Math.toRadians(90));
+
+        TrajectoryActionBuilder clipSpecimen5 = myBot.getDrive().actionBuilder(new Pose2d(35, -61.7, Math.toRadians(90)))
+                .strafeToLinearHeading(new Vector2d(-5, -34), Math.toRadians(-90));
+
+        TrajectoryActionBuilder parkInObservationZone = myBot.getDrive().actionBuilder(new Pose2d(-5, -34, Math.toRadians(90)))
+                .strafeToLinearHeading(new Vector2d(-5, -34), Math.toRadians(-90));
 
 
         myBot.runAction(new SequentialAction(
@@ -71,6 +99,23 @@ public class MeepMeepTesting {
                         pushSamples.build(),
                         //Drop slide / claw
                         grabSpecimen2.build()
+                        //Grab with claw
+                ),
+                new ParallelAction(
+                        clipSpecimen2.build()
+                        //Increase slide and pivot to bar
+                ),
+                new SequentialAction(
+                        //Decrease slide and piot bar(clip)
+                        //Release claw
+                        grabSpecimen3.build(),
+                        clipSpecimen3.build(),
+
+                        grabSpecimen4.build(),
+                        clipSpecimen4.build(),
+
+                        grabSpecimen5.build(),
+                        clipSpecimen5.build()
                 )
         ));
 

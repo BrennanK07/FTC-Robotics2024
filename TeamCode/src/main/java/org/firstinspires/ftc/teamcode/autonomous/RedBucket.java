@@ -19,8 +19,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Config
-@Autonomous(name = "RedBucket", group = "Autonomous")
+//@Config
+//@Autonomous(name = "RedBucket", group = "Autonomous")
 public class RedBucket extends LinearOpMode {
     public Pose2d initialPose = new Pose2d(-11.5, -61, Math.toRadians(90));
     public MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);

@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.tools;
 
 /*
  * INSTRUCTIONS FOR USE (you're welcome chris):
- *
+ * DO NOT INSTANTIATE THIS CLASS AS AN OBJECT
  * import static org.firstinspires.ftc.teamcode.tools.Util22156.*;
  *
  * Once you do this you should be able to just call for functions
@@ -65,4 +65,43 @@ public class Util22156 {
 
         deltaTime = currentUnixTimestamp - oldUnixTimestamp;
     }
+
+    //Vector Math and Conversions
+    // import org.firstinspires.ftc.teamcode.tools.Util22156.Vector2;
+    public static class Vector2{
+        double x;
+        double y;
+
+        public Vector2(double x, double y){
+            this.x = x;
+            this.y = y;
+        }
+
+        public Vector2(){
+            this(0, 0);
+        }
+
+        public Vector2 add(Vector2 a, Vector2 b){
+            return new Vector2(a.x + b.x, a.y + b.y);
+        }
+
+        public Vector2 subtract(Vector2 a, Vector2 b){
+            return new Vector2(a.x - b.x, a.y - b.y);
+        }
+
+        public double dotProduct(Vector2 a, Vector2 b){
+            return (a.x * b.x) + (a.y * b.y);
+        }
+
+        public Vector2 normalize(Vector2 a){
+            double magnitude = Math.sqrt(Math.pow(a.x, 2) + Math.pow(a.y, 2));
+            return new Vector2(a.x / magnitude, a.y / magnitude);
+        }
+
+        public double getAngle(Vector2 a){
+            return Math.atan2(a.x, a.y);
+        }
+    }
+
+    //public double rad
 }

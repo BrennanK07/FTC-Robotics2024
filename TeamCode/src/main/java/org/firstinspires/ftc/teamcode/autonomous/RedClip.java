@@ -21,8 +21,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Config
-@Autonomous(name = "RedClip", group = "Autonomous")
+//@Config
+//@Autonomous(name = "RedClip", group = "Autonomous")
 public class RedClip extends LinearOpMode {
     public static class PlatformSlide {
         private final DcMotor platformSlide;

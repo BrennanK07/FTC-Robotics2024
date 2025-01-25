@@ -21,7 +21,10 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.TankDrive;
 import org.firstinspires.ftc.teamcode.tools.ControllerInputSystem;
 import org.firstinspires.ftc.teamcode.tools.PIDTuner;
+import org.firstinspires.ftc.teamcode.tools.Util22156;
+
 import static org.firstinspires.ftc.teamcode.tools.Util22156.*;
+import org.firstinspires.ftc.teamcode.tools.Util22156.Vector2;
 
 import java.util.Vector;
 
@@ -35,7 +38,7 @@ public class NewMain extends LinearOpMode{
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11.8, -34, Math.toRadians(90)));
 
         ControllerInputSystem controllerSysA = new ControllerInputSystem(gamepad1);
         ControllerInputSystem controllerSysB = new ControllerInputSystem(gamepad2);
@@ -60,6 +63,10 @@ public class NewMain extends LinearOpMode{
 
         final double MAX_SPEED_MULTIPLIER = 0.5;
         final double VERT_SLIDE_MAX_SPEED = 2796.04 * MAX_SPEED_MULTIPLIER;
+
+        Vector2 leftStick1 = new Vector2();
+        Vector2 rightStick1 = new Vector2();
+
 
         //Init motors / servos
 
@@ -91,8 +98,13 @@ public class NewMain extends LinearOpMode{
             }
 
             //Slides and Servos
+            //Maybe set targetPositions to equal the other?
             leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
             rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
+
+            //Master-Slave approach (Weaker one is the master)
+            //leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
+            //rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), leftClimbSlide.getCurrentPosition(), deltaTime);
 
             if(Math.abs(gamepad2.right_stick_y) < 0.2){
                 //Hold position
@@ -141,6 +153,9 @@ public class NewMain extends LinearOpMode{
 
             if(SHOW_DEBUG_VALUES) {
                 debugControllers(telemetry, controllerSysA, controllerSysB);
+
+                leftClimbPID.debugPID(telemetry, "Left Climb PID");
+                rightClimbPID.debugPID(telemetry, "Right Climb PID");
             }
 
             telemetry.addData("General/deltaTime (s)", deltaTime);
