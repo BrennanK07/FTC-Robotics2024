@@ -99,20 +99,23 @@ public class NewMain extends LinearOpMode{
 
             //Slides and Servos
             //Maybe set targetPositions to equal the other?
-            leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
-            rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
+            leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), (int) verticalSlideTargetPos, deltaTime);
+            rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), (int) verticalSlideTargetPos, deltaTime);
 
             //Master-Slave approach (Weaker one is the master)
             //leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
             //rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), leftClimbSlide.getCurrentPosition(), deltaTime);
 
-            if(Math.abs(gamepad2.right_stick_y) < 0.2){ //Run Mode
+            if(Math.abs(gamepad2.right_stick_y) < 0.2){ //Hold Position Mode
                 //Hold position
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                leftClimbSlide.setTargetPosition(lastPosition);
-                rightClimbSlide.setTargetPosition(lastPosition);
+                leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                //leftClimbSlide.setTargetPosition(lastPosition);
+                //rightClimbSlide.setTargetPosition(lastPosition);
 
                 if(lastPosition < -100) {
                     leftClimbSlide.setPower(leftClimbPID.power);
@@ -121,7 +124,7 @@ public class NewMain extends LinearOpMode{
                     leftClimbSlide.setPower(0);
                     rightClimbSlide.setPower(0);
                 }
-            }else{ //Hold Position Mode
+            }else{ //Run Mode
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -130,10 +133,10 @@ public class NewMain extends LinearOpMode{
 
                 lastPosition = leftClimbSlide.getCurrentPosition();
 
-                lastPosition = clamp(lastPosition, -3100, 0);
+                lastPosition = clamp(lastPosition, -4000, 0);
 
                 verticalSlideTargetPos += gamepad2.right_stick_y * VERT_SLIDE_MAX_SPEED * deltaTime;
-                verticalSlideTargetPos = clamp(verticalSlideTargetPos, -3100, 0);
+                verticalSlideTargetPos = clamp(verticalSlideTargetPos, -4000, 0);
             }
 
             telemetry.addData("VerticalSlides/Target Position", verticalSlideTargetPos);

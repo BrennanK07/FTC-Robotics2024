@@ -4,8 +4,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class PIDTuner{
     double kP = 0.1;
-    double kD = 0; //0.005
-    double kI = 0; //0.05
+    double kD = 0.0005; //0.005
+    double kI = 0.01; //0.0005
 
     double prevPos;
 
