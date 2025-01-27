@@ -106,7 +106,7 @@ public class NewMain extends LinearOpMode{
             //leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
             //rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), leftClimbSlide.getCurrentPosition(), deltaTime);
 
-            if(Math.abs(gamepad2.right_stick_y) < 0.2){
+            if(Math.abs(gamepad2.right_stick_y) < 0.2){ //Run Mode
                 //Hold position
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -121,7 +121,7 @@ public class NewMain extends LinearOpMode{
                     leftClimbSlide.setPower(0);
                     rightClimbSlide.setPower(0);
                 }
-            }else{
+            }else{ //Hold Position Mode
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 

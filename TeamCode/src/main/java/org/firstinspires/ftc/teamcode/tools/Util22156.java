@@ -103,5 +103,11 @@ public class Util22156 {
         }
     }
 
-    //public double rad
+    public double rad(double theta){
+        return theta * (Math.PI / 180);
+    }
+
+    public double deg(double theta){
+        return theta * (180 / Math.PI);
+    }
 }
