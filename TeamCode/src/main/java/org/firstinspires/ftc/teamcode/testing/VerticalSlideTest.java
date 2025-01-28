@@ -12,8 +12,8 @@ public class VerticalSlideTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         //Linear slides
-        DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftBack");
-        DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightFront");
+        DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftVerticalSlide");
+        DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightVerticalSlide");
 
         leftClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftClimbSlide.setTargetPosition(0);

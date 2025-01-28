@@ -44,8 +44,8 @@ public class NewMain extends LinearOpMode{
         ControllerInputSystem controllerSysB = new ControllerInputSystem(gamepad2);
 
         //Linear slides
-        DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftBack");
-        DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightFront");
+        DcMotorEx leftClimbSlide = hardwareMap.get(DcMotorEx.class, "leftVerticalSlide");
+        DcMotorEx rightClimbSlide = hardwareMap.get(DcMotorEx.class, "rightVerticalSlide");
 
         leftClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftClimbSlide.setTargetPosition(0);
