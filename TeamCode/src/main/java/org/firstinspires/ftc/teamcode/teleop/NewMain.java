@@ -55,14 +55,24 @@ public class NewMain extends LinearOpMode{
         rightClimbSlide.setTargetPosition(0);
         rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        rightClimbSlide.setDirection(DcMotorSimple.Direction.REVERSE);
+
         PIDTuner leftClimbPID = new PIDTuner(leftClimbSlide.getCurrentPosition());
         PIDTuner rightClimbPID = new PIDTuner(rightClimbSlide.getCurrentPosition());
 
         double verticalSlideTargetPos = 0;
-        int lastPosition = 0;
+        //int lastPosition = 0;
 
-        final double MAX_SPEED_MULTIPLIER = 0.5;
+        final double MAX_SPEED_MULTIPLIER = 0.9;
         final double VERT_SLIDE_MAX_SPEED = 2796.04 * MAX_SPEED_MULTIPLIER;
+
+        Servo barPivot = hardwareMap.get(Servo.class, "a");
+        Servo endPivot = hardwareMap.get(Servo.class, "b");
+        Servo clawRotator = hardwareMap.get(Servo.class, "c");
+        Servo clawPincher = hardwareMap.get(Servo.class, "d");
 
         Vector2 leftStick1 = new Vector2();
         Vector2 rightStick1 = new Vector2();
@@ -74,9 +84,6 @@ public class NewMain extends LinearOpMode{
 
         while (opModeIsActive()) {
             updateDeltaTime();
-
-            controllerSysA.updatePressedButtons();
-            controllerSysB.updatePressedButtons();
 
             //Drive motors thru roadrunner
             if(gamepad1.right_bumper) { //Fast speed
@@ -99,27 +106,27 @@ public class NewMain extends LinearOpMode{
 
             //Slides and Servos
             //Maybe set targetPositions to equal the other?
-            leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), (int) verticalSlideTargetPos, deltaTime);
-            rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), (int) verticalSlideTargetPos, deltaTime);
+            //leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), (int) verticalSlideTargetPos, deltaTime);
+            //rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), (int) verticalSlideTargetPos, deltaTime);
 
             //Master-Slave approach (Weaker one is the master)
             //leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
             //rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), leftClimbSlide.getCurrentPosition(), deltaTime);
 
-            if(Math.abs(gamepad2.right_stick_y) < 0.2){ //Hold Position Mode
+            if(Math.abs(gamepad2.right_stick_y) < 0.1){ //Hold Position Mode
                 //Hold position
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                //leftClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                //rightClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-                //leftClimbSlide.setTargetPosition(lastPosition);
-                //rightClimbSlide.setTargetPosition(lastPosition);
+                leftClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
+                rightClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
 
-                if(lastPosition < -100) {
-                    leftClimbSlide.setPower(leftClimbPID.power);
-                    rightClimbSlide.setPower(rightClimbPID.power);
+                if(verticalSlideTargetPos > 100) {
+                    leftClimbSlide.setPower(1);
+                    rightClimbSlide.setPower(1);
                 }else{
                     leftClimbSlide.setPower(0);
                     rightClimbSlide.setPower(0);
@@ -128,22 +135,30 @@ public class NewMain extends LinearOpMode{
                 leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-                leftClimbSlide.setPower(leftClimbPID.power);
-                rightClimbSlide.setPower(rightClimbPID.power);
+                leftClimbSlide.setPower(-gamepad2.right_stick_y);
+                rightClimbSlide.setPower(-gamepad2.right_stick_y);
 
-                lastPosition = leftClimbSlide.getCurrentPosition();
+                //lastPosition = leftClimbSlide.getCurrentPosition();
 
-                lastPosition = clamp(lastPosition, -4000, 0);
+                //lastPosition = clamp(lastPosition, -4000, 0);
 
-                verticalSlideTargetPos += gamepad2.right_stick_y * VERT_SLIDE_MAX_SPEED * deltaTime;
-                verticalSlideTargetPos = clamp(verticalSlideTargetPos, -4000, 0);
+                verticalSlideTargetPos += leftClimbSlide.getCurrentPosition();
+                verticalSlideTargetPos = clamp(verticalSlideTargetPos, 0, 3800);
             }
 
             telemetry.addData("VerticalSlides/Target Position", verticalSlideTargetPos);
             telemetry.addData("VerticalSlides/Positions", leftClimbSlide.getCurrentPosition() + " " + rightClimbSlide.getCurrentPosition());
 
             //Macros
+            if(gamepad2.a && !controllerSysB.getPressedButtons().contains("A")){
+                //Extends slide and lowers to ground
 
+            }
+
+            if(gamepad2.b && !controllerSysB.getPressedButtons().contains("B")){
+                //Retracts slide and prepares claw for transfer
+
+            }
 
             //Telemetry
             drive.updatePoseEstimate();
@@ -173,6 +188,10 @@ public class NewMain extends LinearOpMode{
             packet.fieldOverlay().setStroke("#3F51B5");
             Drawing.drawRobot(packet.fieldOverlay(), drive.pose);
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
+
+            //Updating Statistics
+            controllerSysA.updatePressedButtons();
+            controllerSysB.updatePressedButtons();
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.testing;
 
+import static org.firstinspires.ftc.teamcode.tools.Util22156.clamp;
 import static org.firstinspires.ftc.teamcode.tools.Util22156.deltaTime;
 import static org.firstinspires.ftc.teamcode.tools.Util22156.updateDeltaTime;
 
@@ -20,27 +21,23 @@ public class ServoTestForClaw extends LinearOpMode {
         Servo d = hardwareMap.get(Servo.class, "d");
 
         Servo[] servos = {a, b, c, d};
-        double[] powers = new double[4];
+        double[] powers = {0.5, 0.5, 0.5, 0.5};
 
         int activeServo = 0;
 
         ControllerInputSystem controllerSys = new ControllerInputSystem(gamepad1);
 
-        for(Servo s : servos){
-            s.setPosition(s.getPosition());
-        }
-
-        for(int i = 0; i < 4; i++){
-            powers[i] = servos[i].getPosition();
+        // Ensure servos stay at initial positions before the op mode starts
+        for (int i = 0; i < 4; i++) {
+            servos[i].setPosition(powers[i]);
         }
 
         waitForStart();
 
         while(opModeIsActive()){
             updateDeltaTime();
-           controllerSys.updatePressedButtons();
 
-           if(gamepad1.a && !controllerSys.getPressedButtons().contains("a")){
+           if(gamepad1.a && !controllerSys.getPressedButtons().contains("A")){
                activeServo++;
 
                if(activeServo > 3){
@@ -50,14 +47,27 @@ public class ServoTestForClaw extends LinearOpMode {
 
            for(int i = 0; i < 4; i++) {
                if(i == activeServo) {
-                   servos[i].setPosition(powers[i] + (5 * deltaTime * gamepad1.left_stick_x));
+                   servos[i].setPosition(powers[i] + (5 * deltaTime * gamepad1.left_stick_y));
+                   powers[i] += (0.5 * deltaTime * gamepad1.left_stick_y);
+
+                   powers[i] = clamp(powers[i], 0, 1);
                }else{
                    servos[i].setPosition(powers[i]);
                }
            }
 
+            controllerSys.updatePressedButtons();
+
            telemetry.addData("current active servo", activeServo);
-           telemetry.addData("servo position", servos[activeServo].getPosition());
+
+           for(int i = 0; i < 4; i++) {
+               telemetry.addData("Servo Position " + i, servos[i].getPosition());
+           }
+
+            for(int i = 0; i < 4; i++) {
+                telemetry.addData("Servo Intended Position " + i, powers[i]);
+            }
+
            telemetry.update();
         }
     }
