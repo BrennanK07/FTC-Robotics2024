@@ -49,11 +49,11 @@ public class NewMain extends LinearOpMode{
 
         leftClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftClimbSlide.setTargetPosition(0);
-        leftClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //leftClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         rightClimbSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightClimbSlide.setTargetPosition(0);
-        rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -63,20 +63,29 @@ public class NewMain extends LinearOpMode{
         PIDTuner leftClimbPID = new PIDTuner(leftClimbSlide.getCurrentPosition());
         PIDTuner rightClimbPID = new PIDTuner(rightClimbSlide.getCurrentPosition());
 
+        DcMotorEx intakeSlide = hardwareMap.get(DcMotorEx.class, "intakeSlide");
+        //intakeSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intakeSlide.setTargetPosition(0);
+        intakeSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        intakeSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         double verticalSlideTargetPos = 0;
         //int lastPosition = 0;
 
         final double MAX_SPEED_MULTIPLIER = 0.9;
         final double VERT_SLIDE_MAX_SPEED = 2796.04 * MAX_SPEED_MULTIPLIER;
 
-        Servo barPivot = hardwareMap.get(Servo.class, "a");
-        Servo endPivot = hardwareMap.get(Servo.class, "b");
+        //Servo leftIntakePivot = hardwareMap.get(Servo.class, "a");
+        Servo rightIntakePivot = hardwareMap.get(Servo.class, "b");
         Servo clawRotator = hardwareMap.get(Servo.class, "c");
-        Servo clawPincher = hardwareMap.get(Servo.class, "d");
+        Servo claw = hardwareMap.get(Servo.class, "d");
+
+        CRServo liftThing = hardwareMap.get(CRServo.class, "a");
 
         Vector2 leftStick1 = new Vector2();
         Vector2 rightStick1 = new Vector2();
 
+        boolean intakeExtended = false;
 
         //Init motors / servos
 
@@ -115,25 +124,33 @@ public class NewMain extends LinearOpMode{
 
             if(Math.abs(gamepad2.right_stick_y) < 0.1){ //Hold Position Mode
                 //Hold position
-                leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                //leftClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                //rightClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                if(leftClimbSlide.getMode().equals(DcMotor.RunMode.RUN_WITHOUT_ENCODER)) {
+                    leftClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    rightClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                    leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+
+                //leftClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
+                //rightClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
 
                 leftClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
                 rightClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
 
                 if(verticalSlideTargetPos > 100) {
-                    leftClimbSlide.setPower(1);
-                    rightClimbSlide.setPower(1);
+                    leftClimbSlide.setPower(0.1);
+                    rightClimbSlide.setPower(0.1);
                 }else{
                     leftClimbSlide.setPower(0);
                     rightClimbSlide.setPower(0);
                 }
             }else{ //Run Mode
-                leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                if(leftClimbSlide.getMode().equals(DcMotor.RunMode.RUN_USING_ENCODER) || leftClimbSlide.getMode().equals(DcMotor.RunMode.RUN_TO_POSITION)) {
+                    leftClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    rightClimbSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                }
 
                 leftClimbSlide.setPower(-gamepad2.right_stick_y);
                 rightClimbSlide.setPower(-gamepad2.right_stick_y);
@@ -142,22 +159,59 @@ public class NewMain extends LinearOpMode{
 
                 //lastPosition = clamp(lastPosition, -4000, 0);
 
-                verticalSlideTargetPos += leftClimbSlide.getCurrentPosition();
+                verticalSlideTargetPos = leftClimbSlide.getCurrentPosition();
+
+                rightClimbSlide.setTargetPosition((int) verticalSlideTargetPos);
                 verticalSlideTargetPos = clamp(verticalSlideTargetPos, 0, 3800);
             }
 
             telemetry.addData("VerticalSlides/Target Position", verticalSlideTargetPos);
             telemetry.addData("VerticalSlides/Positions", leftClimbSlide.getCurrentPosition() + " " + rightClimbSlide.getCurrentPosition());
 
+            telemetry.addData("IntakeSlide/Target Position", intakeSlide.getTargetPosition());
+            telemetry.addData("IntakeSlide/Actual Position", intakeSlide.getCurrentPosition());
+
+            //Servos
+            liftThing.setPower(gamepad2.left_stick_y);
+
             //Macros
             if(gamepad2.a && !controllerSysB.getPressedButtons().contains("A")){
                 //Extends slide and lowers to ground
+                if(!intakeExtended) {
+                    intakeSlide.setTargetPosition(100);
 
+                    intakeExtended = true;
+                }else{
+                    intakeSlide.setTargetPosition(0);
+
+                    intakeExtended = false;
+                }
             }
 
             if(gamepad2.b && !controllerSysB.getPressedButtons().contains("B")){
-                //Retracts slide and prepares claw for transfer
+                //Retracts slide and transfers to vertical slide
 
+            }
+
+            if(gamepad2.x && !controllerSysB.getPressedButtons().contains("X")){
+                //takes grabbed sample and raises it for bucket
+            }
+
+            if(gamepad2.y && !controllerSysB.getPressedButtons().contains("Y")){
+                //takes grabbed specimen and raises it for top rung
+            }
+
+            //Zero motors
+            if(gamepad1.x && gamepad1.y && gamepad1.left_bumper){
+                leftClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                intakeSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                leftClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                rightClimbSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                leftClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightClimbSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
             //Telemetry

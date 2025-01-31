@@ -39,6 +39,18 @@ public class Util22156 {
         return val;
     }
 
+    public static double clamp(double val, int min, int max){
+        if(val < min){
+            return min;
+        }
+
+        if(val > max){
+            return max;
+        }
+
+        return val;
+    }
+
     //Debug controller input outputting
     public static void debugControllers(Telemetry telemetry, ControllerInputSystem c1, ControllerInputSystem c2){
         telemetry.addData("Controller Inputs/Controller 1/Buttons", c1.getPressedFaceButtons());
