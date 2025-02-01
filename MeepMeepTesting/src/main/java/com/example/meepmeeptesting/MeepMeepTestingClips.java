@@ -17,7 +17,7 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 import java.util.Vector;
 
-public class MeepMeepTesting {
+public class MeepMeepTestingClips {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(750);
 

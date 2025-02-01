@@ -15,20 +15,22 @@ import org.firstinspires.ftc.teamcode.tools.ControllerInputSystem;
 public class ServoTestForClaw extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        Servo a = hardwareMap.get(Servo.class, "a");
-        Servo b = hardwareMap.get(Servo.class, "b");
-        Servo c = hardwareMap.get(Servo.class, "c");
-        Servo d = hardwareMap.get(Servo.class, "d");
+        Servo a = hardwareMap.get(Servo.class, "horizontalClawRotator");
+        Servo b = hardwareMap.get(Servo.class, "verticalClawPivot");
+        Servo c = hardwareMap.get(Servo.class, "verticalClaw");
+        Servo d = hardwareMap.get(Servo.class, "intakePivot1");
+        Servo e = hardwareMap.get(Servo.class, "horizontalClaw");
+        Servo f = hardwareMap.get(Servo.class, "intakePivot2");
 
-        Servo[] servos = {a, b, c, d};
-        double[] powers = {0.5, 0.5, 0.5, 0.5};
+        Servo[] servos = {a, b, c, d, e, f};
+        double[] powers = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
         int activeServo = 0;
 
         ControllerInputSystem controllerSys = new ControllerInputSystem(gamepad1);
 
         // Ensure servos stay at initial positions before the op mode starts
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 6; i++) {
             servos[i].setPosition(powers[i]);
         }
 
@@ -40,12 +42,12 @@ public class ServoTestForClaw extends LinearOpMode {
            if(gamepad1.a && !controllerSys.getPressedButtons().contains("A")){
                activeServo++;
 
-               if(activeServo > 3){
+               if(activeServo > 5){
                    activeServo = 0;
                }
            }
 
-           for(int i = 0; i < 4; i++) {
+           for(int i = 0; i < 6; i++) {
                if(i == activeServo) {
                    servos[i].setPosition(powers[i] + (5 * deltaTime * gamepad1.left_stick_y));
                    powers[i] += (0.5 * deltaTime * gamepad1.left_stick_y);
@@ -60,11 +62,11 @@ public class ServoTestForClaw extends LinearOpMode {
 
            telemetry.addData("current active servo", activeServo);
 
-           for(int i = 0; i < 4; i++) {
+           for(int i = 0; i < 6; i++) {
                telemetry.addData("Servo Position " + i, servos[i].getPosition());
            }
 
-            for(int i = 0; i < 4; i++) {
+            for(int i = 0; i < 6; i++) {
                 telemetry.addData("Servo Intended Position " + i, powers[i]);
             }
 
