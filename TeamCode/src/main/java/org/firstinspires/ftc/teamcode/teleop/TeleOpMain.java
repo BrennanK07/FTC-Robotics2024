@@ -15,6 +15,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Drawing;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -24,15 +25,26 @@ import org.firstinspires.ftc.teamcode.tools.PIDTuner;
 import org.firstinspires.ftc.teamcode.tools.Util22156;
 
 import static org.firstinspires.ftc.teamcode.tools.Util22156.*;
+
 import org.firstinspires.ftc.teamcode.tools.Util22156.Vector2;
+
+import static org.firstinspires.ftc.teamcode.tools.PositionConstants.*;
 
 import java.util.Vector;
 
 @TeleOp(name = "Competition TeleOp")
 
-public class NewMain extends LinearOpMode{
+public class TeleOpMain extends LinearOpMode {
     final double TURBO_MOTOR_SPEED = 0.9;
     boolean SHOW_DEBUG_VALUES = false;
+
+    enum IntakeState {
+        EXTEND_SLIDE, PREP_INTAKE_CLAW,
+        IDLE, WAIT1, WAIT2, RETRACT_SLIDE //Retraction
+    }
+
+    private IntakeState intakeState = IntakeState.IDLE;
+    private ElapsedTime intakeTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -89,15 +101,13 @@ public class NewMain extends LinearOpMode{
 
         boolean debugDeleteLater = false;
 
-        //Init motors / servos
-
         waitForStart();
 
         while (opModeIsActive()) {
             updateDeltaTime();
 
             //Drive motors thru roadrunner
-            if(gamepad1.right_bumper) { //Fast speed
+            if (gamepad1.right_bumper) { //Fast speed
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
                                 -gamepad1.left_stick_y * TURBO_MOTOR_SPEED, //Left-right
@@ -105,7 +115,7 @@ public class NewMain extends LinearOpMode{
                         ),
                         -gamepad1.right_stick_x * TURBO_MOTOR_SPEED //Heading adjust
                 ));
-            }else{
+            } else {
                 drive.setDrivePowers(new PoseVelocity2d(
                         new Vector2d(
                                 -gamepad1.left_stick_y * 0.5, //Left-right
@@ -124,7 +134,7 @@ public class NewMain extends LinearOpMode{
             //leftClimbPID.updatePID(leftClimbSlide.getCurrentPosition(), verticalSlideTargetPos, deltaTime);
             //rightClimbPID.updatePID(rightClimbSlide.getCurrentPosition(), leftClimbSlide.getCurrentPosition(), deltaTime);
 
-            if(!intakeExtended) {
+            if (!intakeExtended) {
                 if (Math.abs(gamepad2.right_stick_y) < 0.1) { //Hold Position Mode
                     //Hold position
 
@@ -171,13 +181,69 @@ public class NewMain extends LinearOpMode{
                 }
             }
 
+            //Intake
+            switch (intakeState) {
+                case EXTEND_SLIDE:
+                    if(gamepad2.a && !controllerSysB.getPressedButtons().contains("A")){
+                        intakeSlide.setTargetPosition(IntakeSlide.GRAB);
+
+                        intakeState = IntakeState.PREP_INTAKE_CLAW;
+                        intakeExtended = true;
+                    }
+                    break;
+
+                case PREP_INTAKE_CLAW:
+                    if(Math.abs(intakeSlide.getCurrentPosition() - IntakeSlide.GRAB) > 10){
+                        intakePivotL.setPosition(IntakePivotL.DOWN);
+                        intakePivotR.setPosition(IntakePivotR.DOWN);
+
+                        horizontalClaw.setPosition(IntakeClaw.OPEN);
+                        intakeState = IntakeState.IDLE;
+                    }
+                    break;
+
+                case IDLE:
+                    if (gamepad2.a && !controllerSysB.getPressedButtons().contains("A")) {
+                        horizontalClaw.setPosition(IntakeClaw.CLOSED);
+                        intakeTimer.reset();
+                        intakeState = IntakeState.WAIT1;
+                    }
+                    break;
+
+                case WAIT1:
+                    if (intakeTimer.milliseconds() > 250) {
+                        intakePivotR.setPosition(IntakePivotR.TRANSFER_POSITION);
+                        intakePivotL.setPosition(IntakePivotL.TRANSFER_POSITION);
+                        intakeTimer.reset();
+                        intakeState = IntakeState.WAIT2;
+                    }
+                    break;
+
+                case WAIT2:
+                    if (intakeTimer.milliseconds() > 250) {
+                        intakeSlide.setTargetPosition(IntakeSlide.TRANSFER);
+                        intakeState = IntakeState.RETRACT_SLIDE;
+                    }
+                    break;
+
+                case RETRACT_SLIDE:
+                    if (Math.abs(intakeSlide.getCurrentPosition() - IntakeSlide.TRANSFER) < 10) {
+                        verticalClaw.setPosition(VerticalClaw.OPEN);
+                        verticalClawPivot.setPosition(VerticalClawPivot.LOWEST);
+                        intakeState = IntakeState.EXTEND_SLIDE;
+
+                        intakeExtended = true;
+                    }
+                    break;
+            }
+
             telemetry.addData("VerticalSlides/Target Position", verticalSlideTargetPos);
             telemetry.addData("VerticalSlides/Positions", leftClimbSlide.getCurrentPosition() + " " + rightClimbSlide.getCurrentPosition());
 
-            if(Math.abs(intakeSlide.getCurrentPosition() - intakeSlide.getTargetPosition()) < 10){
+            if (Math.abs(intakeSlide.getCurrentPosition() - intakeSlide.getTargetPosition()) < 10) {
                 telemetry.addData("IntakeSlide/", "Disabled");
                 intakeSlide.setPower(0);
-            }else{
+            } else {
                 telemetry.addData("IntakeSlide/", "Enabled");
                 intakeSlide.setPower(1);
             }
@@ -186,39 +252,49 @@ public class NewMain extends LinearOpMode{
             telemetry.addData("IntakeSlide/Actual Position", intakeSlide.getCurrentPosition());
 
             //Servos
-            if(gamepad2.dpad_up) {
+            if (gamepad2.dpad_up) {
                 liftAssist.setPower(-1);
-            }
-            else if(gamepad2.dpad_down){
+            } else if (gamepad2.dpad_down) {
                 liftAssist.setPower(1);
-            }else{
+            } else {
                 liftAssist.setPower(0);
             }
 
             //Use right control stick on c2 to angle clawRotator
-            if(intakeExtended){
-                double rawPos = gamepad2.right_stick_x;
+            if (intakeExtended) {
+                if(Math.abs(gamepad2.right_stick_x) > 0.1) {
+                    double rawPos = gamepad2.right_stick_x;
 
-                double transformedPos = (Math.acos(rawPos) / Math.PI) * 0.6271 + 0.3729; //Magic
+                    double transformedPos = (Math.acos(rawPos) / Math.PI) * 0.6271 + 0.3729; //Magic
 
-                horizontalClawRotator.setPosition(transformedPos);
+                    horizontalClawRotator.setPosition(transformedPos);
+                }
+
+                if(gamepad2.left_bumper){
+                    horizontalClawRotator.setPosition(clamp(horizontalClawRotator.getPosition() - (deltaTime * 0.25), 0.3729, 1));
+                }
+
+                if(gamepad2.right_bumper){
+                    horizontalClawRotator.setPosition(clamp(horizontalClawRotator.getPosition() + (deltaTime * 0.25), 0.3729, 1));
+                }
             }
 
             //Macros
-            if(gamepad2.a && !controllerSysB.getPressedButtons().contains("A")){
+            /*
+            if (gamepad2.a && !controllerSysB.getPressedButtons().contains("A")) {
                 //Extends slide and lowers to ground
-                if(!intakeExtended) {
-                    intakeSlide.setTargetPosition(2408);
+                if (!intakeExtended) {
+                    intakeSlide.setTargetPosition(IntakeSlide.GRAB);
 
-                    intakePivotR.setPosition(1);
-                    intakePivotL.setPosition(0);
+                    intakePivotR.setPosition(IntakePivotR.DOWN);
+                    intakePivotL.setPosition(IntakePivotL.DOWN);
 
-                    horizontalClaw.setPosition(0.4886);
+                    horizontalClaw.setPosition(IntakeClaw.OPEN);
 
                     intakeExtended = true;
-                }else{
+                } else {
                     //Retracts slide and prepares for transfer
-                    horizontalClaw.setPosition(0.5);
+                    horizontalClaw.setPosition(IntakeClaw.CLOSED);
 
                     Thread.sleep(250);
 
@@ -229,7 +305,7 @@ public class NewMain extends LinearOpMode{
 
                     intakeSlide.setTargetPosition(150);
 
-                    while(Math.abs(intakeSlide.getTargetPosition() - 150) > 10){
+                    while (Math.abs(intakeSlide.getTargetPosition() - 150) > 10) {
                         //Wait for slide retract
                     }
 
@@ -242,7 +318,7 @@ public class NewMain extends LinearOpMode{
                 }
             }
 
-            if(gamepad2.x && !controllerSysB.getPressedButtons().contains("X")){
+            if (gamepad2.x && !controllerSysB.getPressedButtons().contains("X")) {
                 //takes grabbed sample and raises it for bucket
                 verticalClaw.setPosition(0.5);
 
@@ -255,7 +331,7 @@ public class NewMain extends LinearOpMode{
                 verticalClawPivot.setPosition(0.678);
             }
 
-            if(gamepad2.y && !controllerSysB.getPressedButtons().contains("Y")){
+            if (gamepad2.y && !controllerSysB.getPressedButtons().contains("Y")) {
                 //takes grabbed specimen and raises it for top rung
                 verticalClaw.setPosition(0.5);
 
@@ -266,22 +342,23 @@ public class NewMain extends LinearOpMode{
                 verticalClawPivot.setPosition(0.678);
             }
 
-            if(gamepad2.b && controllerSysB.getPressedButtons().contains("B")){
-                if(debugDeleteLater){
+            //debug delete later
+            if (gamepad2.b && controllerSysB.getPressedButtons().contains("B")) {
+                if (debugDeleteLater) {
                     debugDeleteLater = !debugDeleteLater;
 
                     intakePivotL.setPosition(0);
                     intakePivotR.setPosition(1);
-                }else{
+                } else {
                     debugDeleteLater = !debugDeleteLater;
 
                     intakePivotL.setPosition(1);
                     intakePivotR.setPosition(0);
                 }
-            }
+            }*/
 
             //Zero motors
-            if(gamepad1.x && gamepad1.y && gamepad1.left_bumper){
+            if (gamepad1.x && gamepad1.y && gamepad1.left_bumper) {
                 leftClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 rightClimbSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 //intakeSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -296,13 +373,13 @@ public class NewMain extends LinearOpMode{
             //Telemetry
             drive.updatePoseEstimate();
 
-            if(gamepad1.left_bumper && gamepad1.right_bumper){
-                if(!controllerSysA.getPressedButtons().contains("Left Bumper")){ //Stops multi activation on button hold
+            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+                if (!controllerSysA.getPressedButtons().contains("Left Bumper")) { //Stops multi activation on button hold
                     SHOW_DEBUG_VALUES = !SHOW_DEBUG_VALUES;
                 }
             }
 
-            if(SHOW_DEBUG_VALUES) {
+            if (SHOW_DEBUG_VALUES) {
                 debugControllers(telemetry, controllerSysA, controllerSysB);
 
                 leftClimbPID.debugPID(telemetry, "Left Climb PID");
